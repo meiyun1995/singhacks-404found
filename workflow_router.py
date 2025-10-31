@@ -16,6 +16,11 @@ if not os.getenv("OPENAI_API_KEY"):
         "OPENAI_API_KEY not found in environment variables. Please check your .env file."
     )
 
+# The openai-agents library will automatically use OPENAI_BASE_URL and OPENAI_MODEL from environment
+print(f"Using API Base URL: {os.getenv('OPENAI_BASE_URL', 'default OpenAI')}")
+print(f"Using Model: {os.getenv('OPENAI_MODEL', 'default')}")
+print("---")
+
 # ---------- Shared Schemas ----------
 
 
@@ -137,16 +142,19 @@ Return STRICT JSON:
 front_agent = Agent(
     name="FrontOffice",
     instructions=FRONT_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 legal_agent = Agent(
     name="Legal",
     instructions=LEGAL_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 compliance_agent = Agent(
     name="Compliance",
     instructions=COMPLIANCE_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 # ---------- Coordinator / Router Agent (Item 3) ----------
@@ -239,6 +247,7 @@ coordinator = Agent(
     name="Coordinator",
     instructions=COORDINATOR_PROMPT,
     handoffs=[front_handoff, legal_handoff, compliance_handoff],
+    model="llama-3.3-70b-versatile",
 )
 
 # ---------- Example run ----------
