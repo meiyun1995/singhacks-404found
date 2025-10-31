@@ -1,6 +1,7 @@
 """
 Workflow orchestrator for coordinating multiple agents.
 """
+import json
 from typing import Dict, Any, Optional, List
 from openai import OpenAI
 from agents import (
@@ -186,8 +187,6 @@ class WorkflowOrchestrator:
         Args:
             filepath: Path to save the results
         """
-        import json
-        
         with open(filepath, "w") as f:
             json.dump(self.results, f, indent=2)
         

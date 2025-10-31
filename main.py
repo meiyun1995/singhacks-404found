@@ -2,12 +2,15 @@
 Main entry point for the multi-agent workflow system.
 """
 import argparse
+import json
 import sys
 from rich.console import Console
 
 from workflow_orchestrator import WorkflowOrchestrator
 from agents import ResearchAgent, WriterAgent, ReviewerAgent
 from utils import save_to_json, validate_environment
+from config import AgentConfig
+from openai import OpenAI
 
 
 def run_interactive_mode():
@@ -26,6 +29,10 @@ def run_interactive_mode():
         
         choice = console.input("\n[cyan]Select workflow (1-3): [/cyan]")
         
+        # Create shared client and config for consistency
+        config = AgentConfig()
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+        
         if choice == "1":
             topic = console.input("[cyan]Enter research topic: [/cyan]")
             results = orchestrator.run_research_workflow(topic)
@@ -34,7 +41,7 @@ def run_interactive_mode():
             
         elif choice == "2":
             topic = console.input("[cyan]Enter research topic: [/cyan]")
-            researcher = ResearchAgent()
+            researcher = ResearchAgent(client=client, config=config)
             result = researcher.research_topic(topic)
             console.print(f"\n[green]Research Result:[/green]\n{result}")
             
@@ -42,10 +49,10 @@ def run_interactive_mode():
             topic = console.input("[cyan]Enter content topic: [/cyan]")
             content_type = console.input("[cyan]Content type (article/blog/report): [/cyan]")
             
-            writer = WriterAgent()
+            writer = WriterAgent(client=client, config=config)
             content = writer.write_content(content_type, topic)
             
-            reviewer = ReviewerAgent()
+            reviewer = ReviewerAgent(client=client, config=config)
             review = reviewer.review_content(content)
             
             results = {"content": content, "review": review}
@@ -105,7 +112,6 @@ def main():
             
             if args.output:
                 filepath = args.output
-                import json
                 with open(filepath, "w") as f:
                     json.dump(results, f, indent=2)
             else:
