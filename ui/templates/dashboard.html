@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Monitoring Workbench</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <!-- Dashboard Title Panel -->
+        <div class="title-panel">
+            <h1>Transaction Monitoring Workbench</h1>
+        </div>
+
+        <!-- Top Panels -->
+        <div class="summary-panels">
+            <div class="panel total-transactions">
+                <h2>Total Transactions</h2>
+                <p>{{ total_transactions }}</p>
+            </div>
+            <div class="panel action-required">
+                <h2>Transactions Requiring Action</h2>
+                <p>{{ action_required }}</p>
+            </div>
+        </div>
+
+        <!-- Transaction Table -->
+        <div class="table-container">
+            <h2>Transactions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Channel</th>
+                        <th>Product Type</th>
+                        <th>Beneficiary Country</th>
+                        <th>Customer Type</th>
+                        <th>Customer Risk Rating</th>
+                        <th>Client Risk Profile</th>
+                        <th>AI Risk Score</th>
+                        <th>Attention Required</th>
+                        <th>Transaction Time</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr class="clickable-row"
+                        data-href="{{ url_for('transaction_detail', transaction_id=txn.transaction_id) }}">
+                        <td>{{ txn.transaction_id }}</td>
+                        <td>{{ "{:,.2f}".format(txn.transaction_amount) }}</td>
+                        <td>{{ txn.transaction_currency }}</td>
+                        <td>{{ txn.transaction_channel }}</td>
+                        <td>{{ txn.transaction_product_type }}</td>
+                        <td>{{ txn.beneficiary_country }}</td>
+                        <td>{{ txn.customer_type }}</td>
+                        <td>{{ txn.customer_risk_rating }}</td>
+                        <td>{{ txn.client_risk_profile }}</td>
+                        <td>{{ "{:.2f}".format(txn.ai_risk_score) }}</td>
+                        <td class="{% if txn.ai_risk_score > 0.75 %}high-risk{% else %}low-risk{% endif %}">
+                            {% if txn.ai_risk_score > 0.75 %}True{% else %}False{% endif %}
+                        </td>
+                        <td>{{ txn.transaction_time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Make table rows clickable -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".clickable-row").forEach(function(row) {
+                row.addEventListener("click", function() {
+                    window.location = this.dataset.href;
+                });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const tableBody = document.querySelector("tbody");
+            const totalCountElem = document.querySelector(".total-transactions p");
+            const actionCountElem = document.querySelector(".action-required p");
+
+            // Initialize counters
+            let totalTransactions = parseInt(totalCountElem.textContent) || 0;
+            let actionRequired = parseInt(actionCountElem.textContent) || 0;
+
+            const eventSource = new EventSource("/stream/transactions");
+
+            eventSource.onmessage = function(event) {
+                const txn = JSON.parse(event.data);
+
+                // Update counters
+                totalTransactions += 1;
+                if (txn.ai_risk_score > 0.75) actionRequired += 1;
+
+                totalCountElem.textContent = totalTransactions;
+                actionCountElem.textContent = actionRequired;
+
+                // Add new transaction row
+                const row = document.createElement("tr");
+                const attentionRequired = txn.ai_risk_score > 0.75;
+
+                row.innerHTML = `
+                    <td>${txn.transaction_id}</td>
+                    <td>${txn.transaction_amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td>${txn.transaction_currency}</td>
+                    <td>${txn.transaction_channel}</td>
+                    <td>${txn.transaction_product_type}</td>
+                    <td>${txn.beneficiary_country}</td>
+                    <td>${txn.customer_type}</td>
+                    <td>${txn.customer_risk_rating}</td>
+                    <td>${txn.client_risk_profile}</td>
+                    <td>${txn.ai_risk_score.toFixed(2)}</td>
+                    <td class="${attentionRequired ? 'high-risk' : 'low-risk'}">
+                        ${attentionRequired ? 'True' : 'False'}
+                    </td>
+                    <td>${txn.transaction_time}</td>
+                `;
+
+                row.classList.add("clickable-row");
+                row.dataset.href = `/transaction/${txn.transaction_id}`;
+                row.addEventListener("click", function() {
+                    window.location = this.dataset.href;
+                });
+
+                tableBody.prepend(row);
+            };
+
+            eventSource.onerror = function(err) {
+                console.error("SSE connection error:", err);
+                eventSource.close();
+            };
+        });
+    </script>
+</body>
+</html>

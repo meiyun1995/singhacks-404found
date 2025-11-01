@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Detail - {{ transaction.transaction_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <!-- Title Panel -->
+        <div class="title-panel">
+            <h1>Transaction Monitoring Workbench</h1>
+        </div>
+
+        <!-- Detail Header -->
+        <div class="detail-header">
+            <h2>Transaction Detail</h2>
+            <a href="{{ url_for('dashboard') }}" class="back-button">← Back to Dashboard</a>
+        </div>
+
+        <!-- Transaction Info Card -->
+        <div class="transaction-detail-card">
+            <div class="detail-row">
+                <span class="label">Transaction ID:</span>
+                <span class="value">{{ transaction.transaction_id }}</span>
+            </div>
+            <!-- <div class="detail-row">
+                <span class="label">Transaction Amount:</span>
+                <span class="value">{{ "{:.2f}".format(transaction.transaction_amount) }}</span>
+            </div> -->
+            <div class="detail-row">
+                <span class="label">Currency:</span>
+                <span class="value">{{ transaction.transaction_currency }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Channel:</span>
+                <span class="value">{{ transaction.transaction_channel }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Product Type:</span>
+                <span class="value">{{ transaction.transaction_product_type }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Beneficiary Country:</span>
+                <span class="value">{{ transaction.beneficiary_country }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Customer Type:</span>
+                <span class="value">{{ transaction.customer_type }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Customer Risk Rating:</span>
+                <span class="value">{{ transaction.customer_risk_rating }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Client Risk Profile:</span>
+                <span class="value">{{ transaction.client_risk_profile }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">AI Risk Score:</span>
+                <span class="value {% if transaction.ai_risk_score > 0.75 %}high-risk{% endif %}">
+                    {{ "{:.2f}".format(transaction.ai_risk_score) }}
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Attention Required:</span>
+                <span class="value {% if transaction.ai_risk_score > 0.75 %}high-risk{% endif %}">
+                    {% if transaction.ai_risk_score > 0.75 %}True{% else %}False{% endif %}
+                </span>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
