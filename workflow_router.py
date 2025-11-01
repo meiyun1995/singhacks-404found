@@ -254,7 +254,7 @@ coordinator = Agent(
 )
 
 # ---------- Example run with Human-in-the-Loop ----------
-def workflow(report):
+async def workflow(report):
     print("\n" + "=" * 80)
     print("🏦 COMPLIANCE WORKFLOW WITH HUMAN-IN-THE-LOOP")
     print("=" * 80 + "\n")
@@ -298,7 +298,7 @@ def workflow(report):
         tags=["routing", "start"],
     )
 
-    result = Runner.run_sync(
+    result = await Runner.run(
         coordinator,
         f"ANOMALY REPORT JSON:\n{report.model_dump_json(indent=2)}\n"
         "Decide routing, call relevant department handoff tools with DeptHandoffInput, "

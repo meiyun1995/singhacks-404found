@@ -41,7 +41,7 @@ with open("reports/regulations.json") as f:
     regulations = json.load(f)
 
 
-def run_analysis(transaction_id: str):
+async def run_analysis(transaction_id: str):
     with Session() as session:
         transaction = session.query(Transaction).filter_by(transaction_id = transaction_id).first()
     
@@ -71,10 +71,10 @@ def run_analysis(transaction_id: str):
             }
         }
     )
-    workflow(AnomalyReport(**json.loads(completion.choices[0].message.content)))
+    await workflow(AnomalyReport(**json.loads(completion.choices[0].message.content)))
     return "Success!"
 
 
 @app.post("/transactions/analyze")
-def analyze_transaction(request: Request):
-    return run_analysis(request.transaction_id)
+async def analyze_transaction(request: Request):
+    return await run_analysis(request.transaction_id)
