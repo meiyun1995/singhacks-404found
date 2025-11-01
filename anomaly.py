@@ -15,7 +15,6 @@ class AnomalyReport(BaseModel):
     customer_segment: Optional[str] = None
     prior_alert_count_30d: Optional[conint(ge=0)] = 0
 
-# TODO: refine output
 ANOMALY_PROMPT = f"""{RECOMMENDED_PROMPT_PREFIX}
 You are a Financial Crime Monitoring Agent for a regulated bank in Singapore. 
 Analyze the following transaction in real-time for suspicious activity and potential money laundering. 
@@ -30,10 +29,14 @@ Tasks:
 
 Return STRICT JSON:
 {{
-  "final_decision": "Block|Monitor|Allow",
-  "rationale": "…",
-  "required_reporting": "MAS|Internal|None",
-  "next_steps": "Owner(s), concrete actions, SLA"
+  "transaction_id": "",
+  "product": "fx_conversion|wire_transfer|fund_subscription|securities_trade|cash_deposit|cash_withdrawal",
+  "risk_score": 0.0,
+  "regulation": "",
+  "evidence": "",
+  "recommendation": "Block|Monitor|Allow|Escalate",
+  "customer_segment": "",
+  "prior_alert_count_30": 0,
 }}
 """
 
