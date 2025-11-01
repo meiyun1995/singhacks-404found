@@ -34,7 +34,6 @@ Session = sessionmaker(bind=engine)
 @app.post("/transactions/analyze")
 def get_transaction(request: Request):
     # TODO: add agent pipeline here
-    # TODO: specify model on agent level instead of project level
     with Session() as session:
         transaction = session.query(Transaction).filter_by(transaction_id = request.transaction_id).first()
         if not transaction:

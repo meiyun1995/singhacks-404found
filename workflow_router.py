@@ -2,11 +2,13 @@
 import os
 import json
 from dotenv import load_dotenv
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field, conint, confloat
+from typing import Optional
+from pydantic import BaseModel
 from agents import Agent, Runner, handoff
 from agents.extensions import handoff_filters
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+from anomaly import AnomalyReport
+
 
 # Import human-in-the-loop components
 from human_in_loop import (
@@ -36,18 +38,6 @@ class Department(str):
     FRONT = "FrontOffice"
     LEGAL = "Legal"
     COMPLIANCE = "Compliance"
-
-
-class AnomalyReport(BaseModel):
-    # Output of your Agent (2)
-    transaction_id: str
-    product: Literal["CASA", "Cards", "Loans", "Trade", "Wealth", "Others"]
-    risk_score: confloat(ge=0.0, le=1.0)
-    regulation: str  # e.g., "MAS Notice 626 13.14(b)"
-    evidence: str  # concise, salient points / excerpts
-    recommendation: Literal["Block", "Monitor", "Allow", "Escalate"]
-    customer_segment: Optional[str] = None
-    prior_alert_count_30d: Optional[conint(ge=0)] = 0
 
 
 # Optional: input payload that gets passed during handoff
