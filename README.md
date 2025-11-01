@@ -1,24 +1,59 @@
-# 🧠 Compliance Multi-Agent System with Human-in-the-Loop
+# Compliance Multi-Agent System with Human-in-the-Loop
 
-TODO: brief project description
+This project implements a multi-agent compliance workflow with human-in-the-loop for final decision making.
 
-This project implements a **multi-agent compliance automation framework** with **dynamic human-in-the-loop (HITL) decision-making** using the [`openai-agents-python`](https://github.com/openai/openai-agents-python) SDK.
+## Setup Instructions
 
-It models how compliance, legal, and front-office teams coordinate when an anomaly is detected in banking transactions — automatically routing alerts, generating department-specific assessments, and **adapting execution plans based on human management decisions**.
+1. Navigate to the project root folder (i.e. singhacks-404found).
+2. Create a Python 3.11 environment.
+3. Install the dependencies in requirements.txt.
 
-### Instructions
+```bash
+pip install -r requirements.txt
+```
+4. Create a .env file with the following credentials.
 
-TODO: 
-1. Create python environment and install the requirements.txt.
-2. Create .env file with the credentials for . Add JSON for google search.
-3. Entrypoints for each modules and what each module does (table) + sequence of running.
-- ui folder: UI ---> app.py
-- app.py --> REST API to run analysis on transaction given transaction id, 
-- etl.py --> load csv file into sqlite db
-- document analysis --> ...
-- regulatory_ingestion_engine --> digest mas rules
+```
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+OPENAI_API_KEY=<your groq api key>
+GROQ_API_KEY=<your groq api key>
+GOOGLE_API_KEY=<your google api key>
+GOOGLE_CX=<your google search engine id>
+GOOGLE_SEARCH_ENDPOINT=https://www.googleapis.com/customsearch/v1
+GOOGLE_APPLICATION_CREDENTIALS=<path to your google cloud credentials json>
+```
+5. Load transactions csv file into sqlite database.
 
-### Workflow
+```bash
+python etl.py
+```
+
+6. Run regulatory ingestion engine
+
+```bash
+python regulatory_ingestion_engine.py
+```
+
+7. Run transaction analysis engine REST API. Navigate to http://localhost:8000/docs to access the SwaggerUI for the REST API.
+
+```bash
+fastapi run app.py --port 8000
+```
+
+8. Run document analysis engine.
+
+```bash
+python document_analysis/pipeline.py
+```
+
+9. Run integrated solution UI dashboard. Navigate to http://localhost:8100/dashboard to access the dashboard and http://localhost:8100/documents/analyze to access the document analysis engine.
+
+```bash
+cd ui
+fastapi run app.py --port 8100
+```
+
+## System Workflow
 
 TODO: story which will overlap with the video, "script"
 
