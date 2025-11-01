@@ -1,8 +1,14 @@
 # compliance_router.py
 import os
 import json
+import sys
 from dotenv import load_dotenv
-from typing import List, Optional, Literal
+from typing import List, Optional
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 from pydantic import BaseModel, Field, conint, confloat
 from agents import Agent, Runner, handoff
 from agents.extensions import handoff_filters
