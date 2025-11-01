@@ -14,6 +14,7 @@ from human_in_loop import (
     ActionExecutor,
     simulate_human_approval,
 )
+from interactive_approval import interactive_approval_cli
 
 # Load environment variables from .env file
 load_dotenv()
@@ -353,7 +354,9 @@ if __name__ == "__main__":
         print("   ⚠️  Human approval REQUIRED")
 
         # Simulate human approval (in production, this would be interactive)
-        approval_response = simulate_human_approval(approval_request)
+        # approval_response = simulate_human_approval(approval_request)
+        # Use interactive CLI instead of simulation
+        approval_response = interactive_approval_cli(approval_request)
 
         print(f"\n   Decision: {approval_response.status.value.upper()}")
         print(
@@ -395,10 +398,44 @@ if __name__ == "__main__":
     print(f"Transaction ID: {report.transaction_id}")
     print(f"Risk Score: {report.risk_score}")
     print(f"Agents Involved: {', '.join(coordinator_data.get('routed_agents', []))}")
-    print(
-        f"Human Approval: {'Required and Obtained' if needs_approval else 'Not Required'}"
-    )
+
+    # Enhanced approval status reporting
+    if needs_approval and approval_response:
+        approval_status_icon = {
+            "approved": "✅",
+            "rejected": "❌",
+            "escalated": "🔺",
+            "pending": "⏳",
+        }.get(approval_response.status.value, "❓")
+
+        print(
+            f"Human Approval: {approval_status_icon} {approval_response.status.value.upper()}"
+        )
+        print(
+            f"  Approved by: {approval_response.approver_name} ({approval_response.approver_role})"
+        )
+
+        if approval_response.status == "rejected":
+            print(f"  ⚠️  Original recommendation REJECTED by management")
+        elif approval_response.status == "escalated":
+            print(f"  🔺 Case ESCALATED to higher authority")
+        elif (
+            approval_response.decision
+            and "modify" in approval_response.decision.lower()
+        ):
+            print(f"  🔄 Recommendation MODIFIED by management")
+
+        if approval_response.comments:
+            print(f"  Comments: {approval_response.comments}")
+    else:
+        print(f"Human Approval: Not Required")
+
     print(f"Final Decision: {final_decision}")
+
+    # Show execution plan details if modified
+    if execution_plan.rollback_plan:
+        print(f"Execution Notes: {execution_plan.rollback_plan}")
+
     print(f"Actions Executed: {len(execution_results)}/{len(execution_plan.actions)}")
     print(
         f"Status: {'✅ COMPLETED' if all(r.status == 'success' for r in execution_results) else '⚠️  PARTIAL'}"

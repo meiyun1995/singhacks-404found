@@ -220,8 +220,98 @@ class ActionExecutor:
         approval_response: Optional[HumanApprovalResponse] = None,
     ) -> ActionExecutionPlan:
         """
-        Create an execution plan based on the final decision
+        Create an execution plan based on the final decision and approval status
+        Branches logic based on approval response status
         """
+        # Branch based on approval status
+        if approval_response:
+            if approval_response.status == ApprovalStatus.REJECTED:
+                return self._create_rejection_plan(
+                    transaction_id,
+                    final_decision,
+                    department_results,
+                    approval_response,
+                )
+            elif approval_response.status == ApprovalStatus.ESCALATED:
+                return self._create_escalation_plan(
+                    transaction_id,
+                    final_decision,
+                    department_results,
+                    approval_response,
+                )
+            elif (
+                approval_response.status == ApprovalStatus.APPROVED
+                and approval_response.decision
+            ):
+                # Check if management modified the decision
+                if self._is_decision_modified(
+                    final_decision, approval_response.decision
+                ):
+                    return self._create_modified_plan(
+                        transaction_id,
+                        final_decision,
+                        department_results,
+                        approval_response,
+                    )
+
+        # Default approved plan or no approval needed
+        return self._create_standard_plan(
+            transaction_id, final_decision, department_results, approval_response
+        )
+
+    def _is_decision_modified(
+        self, original_decision: str, approval_decision: str
+    ) -> bool:
+        """Check if the management decision modifies the original recommendation"""
+        # Look for override keywords in the approval decision
+        approval_lower = approval_decision.lower()
+        original_lower = original_decision.lower()
+
+        # Explicit modification keywords take precedence
+        override_keywords = [
+            "modify",
+            "modified",
+            "change",
+            "changed",
+            "instead",
+            "override",
+            "downgrade",
+            "upgrade",
+        ]
+        has_explicit_override = any(
+            keyword in approval_lower for keyword in override_keywords
+        )
+
+        if has_explicit_override:
+            return True
+
+        # Check if decision mentions different action than original (but exclude approval keywords)
+        decision_keywords = {
+            "block": ["block", "freeze", "suspend", "blocking"],
+            "monitor": ["monitor", "watch", "observe", "monitoring"],
+            "allow": ["allow", "permit"],  # Removed 'approve' to avoid false positives
+        }
+
+        # Only flag as modified if a DIFFERENT action is explicitly mentioned
+        for decision_type, keywords in decision_keywords.items():
+            if decision_type != original_lower:
+                # Check if this different action is mentioned with action verbs
+                for keyword in keywords:
+                    if keyword in approval_lower and any(
+                        verb in approval_lower for verb in ["to ", "with ", "for "]
+                    ):
+                        return True
+
+        return False
+
+    def _create_standard_plan(
+        self,
+        transaction_id: str,
+        final_decision: str,
+        department_results: Dict[str, Any],
+        approval_response: Optional[HumanApprovalResponse] = None,
+    ) -> ActionExecutionPlan:
+        """Create standard execution plan for approved decisions"""
         actions = []
         notification_channels = [
             NotificationChannel.EMAIL,
@@ -267,20 +357,7 @@ class ActionExecutor:
             actions.extend(approval_response.additional_actions)
 
         # Define execution order (priority-based)
-        action_priority = {
-            ActionType.BLOCK_CARD: 1,
-            ActionType.FREEZE_ACCOUNT: 1,
-            ActionType.FILE_STR: 2,
-            ActionType.NOTIFY_MAS: 2,
-            ActionType.CONTACT_CUSTOMER: 3,
-            ActionType.ESCALATE_TO_SENIOR: 4,
-            ActionType.MONITOR_ONLY: 5,
-            ActionType.ALLOW_TRANSACTION: 6,
-        }
-
-        execution_order = sorted(
-            range(len(actions)), key=lambda i: action_priority.get(actions[i], 99)
-        )
+        execution_order = self._calculate_execution_order(actions)
 
         return ActionExecutionPlan(
             transaction_id=transaction_id,
@@ -288,6 +365,195 @@ class ActionExecutor:
             execution_order=execution_order,
             notification_channels=notification_channels,
             notification_recipients=recipients,
+        )
+
+    def _create_rejection_plan(
+        self,
+        transaction_id: str,
+        final_decision: str,
+        department_results: Dict[str, Any],
+        approval_response: HumanApprovalResponse,
+    ) -> ActionExecutionPlan:
+        """Create execution plan when management rejects the recommendation"""
+        print(f"\n⚠️  Creating REJECTION plan - management rejected recommendation")
+
+        # For rejection: log the rejection, notify teams, but don't execute blocking actions
+        actions = [
+            ActionType.MONITOR_ONLY,  # Downgrade to monitoring
+        ]
+
+        notification_channels = [
+            NotificationChannel.EMAIL,
+            NotificationChannel.DASHBOARD,
+            NotificationChannel.SLACK,  # Extra notification for rejection
+        ]
+
+        recipients = [
+            "compliance@bank.com.sg",
+            "senior-manager@bank.com.sg",
+            "audit-trail@bank.com.sg",  # Audit the rejection
+        ]
+
+        # Add any additional actions specified by approver
+        if approval_response.additional_actions:
+            actions.extend(approval_response.additional_actions)
+
+        execution_order = self._calculate_execution_order(actions)
+
+        return ActionExecutionPlan(
+            transaction_id=transaction_id,
+            actions=actions,
+            execution_order=execution_order,
+            notification_channels=notification_channels,
+            notification_recipients=recipients,
+            rollback_plan=f"Rejection by {approval_response.approver_name}: {approval_response.comments}",
+        )
+
+    def _create_escalation_plan(
+        self,
+        transaction_id: str,
+        final_decision: str,
+        department_results: Dict[str, Any],
+        approval_response: HumanApprovalResponse,
+    ) -> ActionExecutionPlan:
+        """Create execution plan when case is escalated to higher authority"""
+        print(f"\n🔺 Creating ESCALATION plan - case escalated to higher authority")
+
+        # For escalation: notify senior management, create escalation ticket, monitor pending decision
+        actions = [
+            ActionType.ESCALATE_TO_SENIOR,
+            ActionType.MONITOR_ONLY,  # Monitor while escalated
+        ]
+
+        # If high risk, add protective measures during escalation
+        if department_results.get("Legal", {}).get("legal_risk_level") == "High":
+            actions.insert(
+                0, ActionType.FREEZE_ACCOUNT
+            )  # Temporary freeze pending decision
+
+        notification_channels = [
+            NotificationChannel.EMAIL,
+            NotificationChannel.DASHBOARD,
+            NotificationChannel.TEAMS,  # Use Teams for escalation
+        ]
+
+        recipients = [
+            "compliance@bank.com.sg",
+            "head-of-compliance@bank.com.sg",
+            "ceo@bank.com.sg",  # Escalate to executive level
+            "legal-counsel@bank.com.sg",
+        ]
+
+        # Add any additional actions specified by approver
+        if approval_response.additional_actions:
+            actions.extend(approval_response.additional_actions)
+
+        execution_order = self._calculate_execution_order(actions)
+
+        return ActionExecutionPlan(
+            transaction_id=transaction_id,
+            actions=actions,
+            execution_order=execution_order,
+            notification_channels=notification_channels,
+            notification_recipients=recipients,
+            rollback_plan=f"Escalated by {approval_response.approver_name}: {approval_response.comments}",
+        )
+
+    def _create_modified_plan(
+        self,
+        transaction_id: str,
+        final_decision: str,
+        department_results: Dict[str, Any],
+        approval_response: HumanApprovalResponse,
+    ) -> ActionExecutionPlan:
+        """Create execution plan when management modifies the recommendation"""
+        print(f"\n🔄 Creating MODIFIED plan - management changed recommendation")
+
+        # Parse the modified decision from approval response
+        approval_text = approval_response.decision.lower()
+
+        # Determine new decision from approval text
+        if any(word in approval_text for word in ["allow", "approve", "permit"]):
+            modified_decision = "Allow"
+        elif any(word in approval_text for word in ["monitor", "watch", "observe"]):
+            modified_decision = "Monitor"
+        elif any(word in approval_text for word in ["block", "freeze", "suspend"]):
+            modified_decision = "Block"
+        else:
+            # Default to monitor if unclear
+            modified_decision = "Monitor"
+
+        print(f"   Original: {final_decision} → Modified: {modified_decision}")
+
+        # Create plan based on modified decision (reuse standard logic)
+        actions = []
+        notification_channels = [
+            NotificationChannel.EMAIL,
+            NotificationChannel.DASHBOARD,
+        ]
+        recipients = ["compliance@bank.com.sg"]
+
+        if modified_decision == "Block":
+            actions.extend(
+                [
+                    ActionType.BLOCK_CARD,
+                    ActionType.CONTACT_CUSTOMER,
+                    ActionType.FILE_STR,
+                ]
+            )
+            notification_channels.append(NotificationChannel.SMS)
+            recipients.extend(["fraud-team@bank.com.sg", "senior-manager@bank.com.sg"])
+        elif modified_decision == "Monitor":
+            actions.extend(
+                [
+                    ActionType.MONITOR_ONLY,
+                    ActionType.CONTACT_CUSTOMER,
+                ]
+            )
+        elif modified_decision == "Allow":
+            actions.append(ActionType.ALLOW_TRANSACTION)
+
+        # Add MAS notification if required
+        compliance_result = department_results.get("Compliance", {})
+        if isinstance(compliance_result, dict) and "MAS" in compliance_result.get(
+            "required_reporting", ""
+        ):
+            actions.append(ActionType.NOTIFY_MAS)
+            recipients.append("regulatory-reporting@bank.com.sg")
+
+        # Add additional actions from approver
+        if approval_response.additional_actions:
+            actions.extend(approval_response.additional_actions)
+
+        # Add notification about modification
+        recipients.append("audit-trail@bank.com.sg")
+
+        execution_order = self._calculate_execution_order(actions)
+
+        return ActionExecutionPlan(
+            transaction_id=transaction_id,
+            actions=actions,
+            execution_order=execution_order,
+            notification_channels=notification_channels,
+            notification_recipients=recipients,
+            rollback_plan=f"Modified by {approval_response.approver_name} from '{final_decision}' to '{modified_decision}': {approval_response.comments}",
+        )
+
+    def _calculate_execution_order(self, actions: List[ActionType]) -> List[int]:
+        """Calculate priority-based execution order for actions"""
+        action_priority = {
+            ActionType.FREEZE_ACCOUNT: 1,
+            ActionType.BLOCK_CARD: 1,
+            ActionType.FILE_STR: 2,
+            ActionType.NOTIFY_MAS: 2,
+            ActionType.ESCALATE_TO_SENIOR: 3,
+            ActionType.CONTACT_CUSTOMER: 4,
+            ActionType.MONITOR_ONLY: 5,
+            ActionType.ALLOW_TRANSACTION: 6,
+        }
+
+        return sorted(
+            range(len(actions)), key=lambda i: action_priority.get(actions[i], 99)
         )
 
     def execute_action(
@@ -312,6 +578,11 @@ class ActionExecutor:
             result.details = (
                 "Card blocked in core banking system. Block ID: BLK-" + transaction_id
             )
+        elif action == ActionType.FREEZE_ACCOUNT:
+            result.details = (
+                "Account frozen in core banking system. Freeze ID: FRZ-"
+                + transaction_id
+            )
         elif action == ActionType.CONTACT_CUSTOMER:
             result.details = (
                 "Customer notification sent via SMS and email. Ticket ID: TKT-"
@@ -325,6 +596,21 @@ class ActionExecutor:
         elif action == ActionType.NOTIFY_MAS:
             result.details = (
                 "MAS notification submitted via regulatory portal. Ref: MAS-"
+                + transaction_id
+            )
+        elif action == ActionType.ESCALATE_TO_SENIOR:
+            result.details = (
+                "Case escalated to senior management. Escalation ticket: ESC-"
+                + transaction_id
+            )
+        elif action == ActionType.MONITOR_ONLY:
+            result.details = (
+                "Transaction added to monitoring watchlist. Monitor ID: MON-"
+                + transaction_id
+            )
+        elif action == ActionType.ALLOW_TRANSACTION:
+            result.details = (
+                "Transaction approved and allowed to proceed. Approval ID: APV-"
                 + transaction_id
             )
 
