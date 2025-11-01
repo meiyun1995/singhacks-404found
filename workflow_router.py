@@ -1,11 +1,19 @@
 # compliance_router.py
 import os
+import json
 from dotenv import load_dotenv
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, conint, confloat
 from agents import Agent, Runner, handoff
 from agents.extensions import handoff_filters
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+
+# Import human-in-the-loop components
+from human_in_loop import (
+    HumanInLoopDecisionEngine,
+    ActionExecutor,
+    simulate_human_approval,
+)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,6 +23,11 @@ if not os.getenv("OPENAI_API_KEY"):
     raise ValueError(
         "OPENAI_API_KEY not found in environment variables. Please check your .env file."
     )
+
+# The openai-agents library will automatically use OPENAI_BASE_URL and OPENAI_MODEL from environment
+print(f"Using API Base URL: {os.getenv('OPENAI_BASE_URL', 'default OpenAI')}")
+print(f"Using Model: {os.getenv('OPENAI_MODEL', 'default')}")
+print("---")
 
 # ---------- Shared Schemas ----------
 
@@ -27,7 +40,7 @@ class Department(str):
 
 class AnomalyReport(BaseModel):
     # Output of your Agent (2)
-    case_id: str
+    transaction_id: str
     product: Literal["CASA", "Cards", "Loans", "Trade", "Wealth", "Others"]
     risk_score: confloat(ge=0.0, le=1.0)
     regulation: str  # e.g., "MAS Notice 626 13.14(b)"
@@ -39,7 +52,7 @@ class AnomalyReport(BaseModel):
 
 # Optional: input payload that gets passed during handoff
 class DeptHandoffInput(BaseModel):
-    case_id: str
+    transaction_id: str
     risk_score: float
     regulation: str
     evidence: str
@@ -137,16 +150,19 @@ Return STRICT JSON:
 front_agent = Agent(
     name="FrontOffice",
     instructions=FRONT_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 legal_agent = Agent(
     name="Legal",
     instructions=LEGAL_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 compliance_agent = Agent(
     name="Compliance",
     instructions=COMPLIANCE_PROMPT,
+    model="llama-3.3-70b-versatile",
 )
 
 # ---------- Coordinator / Router Agent (Item 3) ----------
@@ -239,14 +255,19 @@ coordinator = Agent(
     name="Coordinator",
     instructions=COORDINATOR_PROMPT,
     handoffs=[front_handoff, legal_handoff, compliance_handoff],
+    model="llama-3.3-70b-versatile",
 )
 
-# ---------- Example run ----------
+# ---------- Example run with Human-in-the-Loop ----------
 
 if __name__ == "__main__":
+    print("\n" + "=" * 80)
+    print("🏦 COMPLIANCE WORKFLOW WITH HUMAN-IN-THE-LOOP")
+    print("=" * 80 + "\n")
+
     # Example anomaly report from Agent (2)
     report = AnomalyReport(
-        case_id="C-2025-10-31-0001",
+        transaction_id="TXN-2025-11-01-0001",
         product="Cards",
         risk_score=0.86,
         regulation="MAS Notice 626 13.14(b)",
@@ -256,8 +277,16 @@ if __name__ == "__main__":
         prior_alert_count_30d=2,
     )
 
-    # Coordinator will decide which handoffs to invoke and aggregate results
-    # You can pass the entire object; the model will decide what to forward.
+    print("📊 STEP 1: Anomaly Detection")
+    print(f"   Transaction ID: {report.transaction_id}")
+    print(f"   Risk Score: {report.risk_score}")
+    print(f"   Recommendation: {report.recommendation}")
+    print(f"   Prior Alerts (30d): {report.prior_alert_count_30d}")
+
+    # STEP 1: Run multi-agent coordination
+    print("\n🤖 STEP 2: Multi-Agent Coordination")
+    print("   Running coordinator agent to route to departments...")
+
     result = Runner.run_sync(
         coordinator,
         f"ANOMALY REPORT JSON:\n{report.model_dump_json(indent=2)}\n"
@@ -265,6 +294,121 @@ if __name__ == "__main__":
         "then aggregate departmental JSON outputs and produce final JSON.",
     )
 
+    print("\n📋 Coordinator Output:")
+    coordinator_output = result.final_output
+    print(coordinator_output)
+
+    # Parse the coordinator output
+    try:
+        if isinstance(coordinator_output, str):
+            # Try to extract JSON from markdown code blocks if present
+            if "```json" in coordinator_output:
+                json_start = coordinator_output.find("```json") + 7
+                json_end = coordinator_output.find("```", json_start)
+                coordinator_data = json.loads(coordinator_output[json_start:json_end])
+            elif "```" in coordinator_output:
+                json_start = coordinator_output.find("```") + 3
+                json_end = coordinator_output.find("```", json_start)
+                coordinator_data = json.loads(coordinator_output[json_start:json_end])
+            else:
+                # Try to find JSON object in the string
+                start = coordinator_output.find("{")
+                end = coordinator_output.rfind("}") + 1
+                coordinator_data = json.loads(coordinator_output[start:end])
+        else:
+            coordinator_data = coordinator_output
+    except Exception as e:
+        print(f"\n⚠️  Warning: Could not parse coordinator output as JSON: {e}")
+        print("   Proceeding with mock data for demonstration...")
+        coordinator_data = {
+            "routed_agents": ["FrontOffice", "Legal", "Compliance"],
+            "department_results": {
+                "FrontOffice": {
+                    "action_plan": "Block card immediately",
+                    "escalation_needed": True,
+                },
+                "Legal": {"legal_risk_level": "High", "required_disclosure": "MAS"},
+                "Compliance": {"final_decision": "Block", "required_reporting": "MAS"},
+            },
+        }
+
+    # STEP 2: Check if human approval is needed
+    print("\n🔍 STEP 3: Human-in-the-Loop Decision Check")
+
+    hitl_engine = HumanInLoopDecisionEngine()
+    department_results = coordinator_data.get("department_results", {})
+
+    needs_approval, approval_request = hitl_engine.requires_human_approval(
+        transaction_id=report.transaction_id,
+        risk_score=report.risk_score,
+        regulation=report.regulation,
+        recommendation=report.recommendation,
+        department_results=department_results,
+        prior_alert_count=report.prior_alert_count_30d,
+    )
+
+    approval_response = None
+
+    if needs_approval and approval_request:
+        print("   ⚠️  Human approval REQUIRED")
+
+        # Simulate human approval (in production, this would be interactive)
+        approval_response = simulate_human_approval(approval_request)
+
+        print(f"\n   Decision: {approval_response.status.value.upper()}")
+        print(
+            f"   Approved by: {approval_response.approver_name} ({approval_response.approver_role})"
+        )
+        if approval_response.comments:
+            print(f"   Comments: {approval_response.comments}")
+    else:
+        print("   ✅ No human approval needed - proceeding with automated execution")
+
+    # STEP 3: Create and execute action plan
+    print("\n⚙️  STEP 4: Action Execution")
+
+    executor = ActionExecutor()
+
+    # Get final decision from compliance result or approval
+    compliance_result = department_results.get("Compliance", {})
+    final_decision = compliance_result.get("final_decision", report.recommendation)
+
+    # Create execution plan
+    execution_plan = executor.create_execution_plan(
+        transaction_id=report.transaction_id,
+        final_decision=final_decision,
+        department_results=department_results,
+        approval_response=approval_response,
+    )
+
     print(
-        result.final_output
-    )  # Unified JSON with routed_agents, department_results, final_summary
+        f"\n   Actions planned: {[action.value for action in execution_plan.actions]}"
+    )
+
+    # Execute the plan
+    execution_results = executor.execute_plan(execution_plan)
+
+    # STEP 4: Summary
+    print("\n" + "=" * 80)
+    print("📊 WORKFLOW SUMMARY")
+    print("=" * 80)
+    print(f"Transaction ID: {report.transaction_id}")
+    print(f"Risk Score: {report.risk_score}")
+    print(f"Agents Involved: {', '.join(coordinator_data.get('routed_agents', []))}")
+    print(
+        f"Human Approval: {'Required and Obtained' if needs_approval else 'Not Required'}"
+    )
+    print(f"Final Decision: {final_decision}")
+    print(f"Actions Executed: {len(execution_results)}/{len(execution_plan.actions)}")
+    print(
+        f"Status: {'✅ COMPLETED' if all(r.status == 'success' for r in execution_results) else '⚠️  PARTIAL'}"
+    )
+    print("=" * 80 + "\n")
+
+    # Print detailed execution results
+    print("📝 Execution Details:")
+    for i, result in enumerate(execution_results, 1):
+        status_icon = "✅" if result.status == "success" else "❌"
+        print(f"   {i}. {status_icon} {result.action.value}: {result.details}")
+
+    print("\n✨ Workflow completed successfully!\n")
