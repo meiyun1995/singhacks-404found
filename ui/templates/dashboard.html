@@ -51,10 +51,10 @@
                     <tr class="clickable-row"
                         data-href="{{ url_for('transaction_detail', transaction_id=txn.transaction_id) }}">
                         <td>{{ txn.transaction_id }}</td>
-                        <td>{{ "{:,.2f}".format(txn.transaction_amount) }}</td>
-                        <td>{{ txn.transaction_currency }}</td>
-                        <td>{{ txn.transaction_channel }}</td>
-                        <td>{{ txn.transaction_product_type }}</td>
+                        <td>{{ "{:,.2f}".format(txn.amount) }}</td>
+                        <td>{{ txn.currency }}</td>
+                        <td>{{ txn.channel }}</td>
+                        <td>{{ txn.product_type }}</td>
                         <td>{{ txn.beneficiary_country }}</td>
                         <td>{{ txn.customer_type }}</td>
                         <td>{{ txn.customer_risk_rating }}</td>
@@ -109,10 +109,10 @@
 
                 row.innerHTML = `
                     <td>${txn.transaction_id}</td>
-                    <td>${txn.transaction_amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td>${txn.transaction_currency}</td>
-                    <td>${txn.transaction_channel}</td>
-                    <td>${txn.transaction_product_type}</td>
+                    <td>${txn.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td>${txn.currency}</td>
+                    <td>${txn.channel}</td>
+                    <td>${txn.product_type}</td>
                     <td>${txn.beneficiary_country}</td>
                     <td>${txn.customer_type}</td>
                     <td>${txn.customer_risk_rating}</td>
