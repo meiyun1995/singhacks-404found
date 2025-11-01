@@ -7,11 +7,14 @@ load_dotenv()
 # Tell Google client libs where to find your credentials
 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 if not cred_path or not os.path.exists(cred_path):
-    raise FileNotFoundError("Missing or invalid GOOGLE_APPLICATION_CREDENTIALS path in .env")
+    raise FileNotFoundError(
+        "Missing or invalid GOOGLE_APPLICATION_CREDENTIALS path in .env"
+    )
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = cred_path
 
 from google.cloud import vision
+
 
 def reverse_image_search_gcv(image_path_or_url: str):
     client = vision.ImageAnnotatorClient()
@@ -34,9 +37,12 @@ def reverse_image_search_gcv(image_path_or_url: str):
         "partial_matching_images": [i.url for i in web.partial_matching_images],
         "visually_similar_images": [i.url for i in web.visually_similar_images],
         "best_guess_labels": [l.label for l in web.best_guess_labels],
-        "web_entities": [{"desc": e.description, "score": e.score} for e in web.web_entities],
+        "web_entities": [
+            {"desc": e.description, "score": e.score} for e in web.web_entities
+        ],
     }
     return result
+
 
 def assess_image_authenticity(result: dict) -> dict:
     """
@@ -59,7 +65,7 @@ def assess_image_authenticity(result: dict) -> dict:
             "authenticity_verdict": "Possibly Stolen or Reused",
             "confidence": round(confidence, 2),
             "evidence_links": evidence_links,
-            "reason": "Exact or partial duplicates were found online."
+            "reason": "Exact or partial duplicates were found online.",
         }
 
     # No exact match but some visually similar ones
@@ -69,7 +75,7 @@ def assess_image_authenticity(result: dict) -> dict:
             "authenticity_verdict": "⚠️ No exact matches, but visually similar images found",
             "confidence": confidence,
             "evidence_links": similar,
-            "reason": "Visually similar images exist online, though not identical."
+            "reason": "Visually similar images exist online, though not identical.",
         }
 
     # No signals found — likely authentic / private
@@ -79,9 +85,5 @@ def assess_image_authenticity(result: dict) -> dict:
             "authenticity_verdict": "Likely Authentic / Not found online",
             "confidence": confidence,
             "evidence_links": [],
-            "reason": "No online matches or duplicates detected."
+            "reason": "No online matches or duplicates detected.",
         }
-
-
-result = reverse_image_search_gcv("1761982583131.jpg")
-print(assess_image_authenticity(result))
