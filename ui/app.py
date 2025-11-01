@@ -19,8 +19,14 @@ initial_txn["transaction_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 live_transactions.append(initial_txn)
 pending_transactions = db[~(db.transaction_id == "ad66338d-b17f-47fc-a966-1b4395351b41")].to_dict(orient="records")
 
-with open("../reports/RPT-20251101-0001_ad66338d-b17f-47fc-a966-1b4395351b41.text", "r") as f: # TODO: add for part 2 cache
+with open("../reports/RPT-20251101-0001_ad66338d-b17f-47fc-a966-1b4395351b41.text", "r") as f:
     cached_report = f.read()
+
+with open("../reports/report_Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.txt") as f:
+    image_cached_report = f.read()
+
+with open("../audit_logs/audit_ad66338d-b17f-47fc-a966-1b4395351b41_20251101154951.text") as f:
+    audit_report = f.read()
 
 @app.get("/dashboard")
 async def dashboard(request: Request):
@@ -38,7 +44,7 @@ async def dashboard(request: Request):
 async def transaction_detail(request: Request, transaction_id: str):
     return templates.TemplateResponse(
         "transaction_detail.html",
-        {"request": request, "transaction": initial_txn, "transaction_report_text": cached_report},
+        {"request": request, "transaction": initial_txn, "transaction_report_text": cached_report, "audit_report": audit_report},
     )
 
 @app.get("/stream/transactions")
@@ -67,7 +73,7 @@ async def stream_analysis():
     Simulate streaming of document analysis char by char.
     """
     async def event_generator():
-        for char in cached_report:
+        for char in image_cached_report:
             yield f"data: {json.dumps(char)}\n\n"
             await asyncio.sleep(0.01)
     return StreamingResponse(event_generator(), media_type="text/event-stream")

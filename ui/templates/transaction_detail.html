@@ -183,6 +183,11 @@
             <button class="submit-btn" onclick="submitReport()">Submit</button>
         </div>
     </div>
+
+    <div class="report-panel">
+        <h2 style="font-size: 1rem; margin-bottom: 10px;">Audit Trail</h2>
+        <textarea id="report-text" readonly >{{ audit_report or '' }}</textarea>
+    </div>
 </div>
 
 <!-- Custom Alert Box -->
