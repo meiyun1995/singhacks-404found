@@ -28,17 +28,6 @@ You need to perform the following tasks:
 - Provide real-time feedback to compliance officers, highlighting any issues or potential risks.
 """
 
-
-# Image Analysis (Image Processing)
-
-# Perform authenticity verification: Detect any stolen images through reverse image search.
-
-# Identify AI-generated images using metadata analysis or synthetic image detection techniques.
-
-# Perform tampering detection: Look for signs of pixel-level manipulation or changes in metadata.
-
-# Run a forensic analysis to identify any indicators of image manipulation, such as cloning, editing, or masking.
-
 zoom_matrix = pymupdf.Matrix(0.5, 0.5)
 doc = pymupdf.open("data/Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.pdf")
 for page in doc:
@@ -63,7 +52,6 @@ chat_completion = client.chat.completions.create(
                         "url": f"data:image/jpeg;base64,{image_data}",
                     },
                 },
-                # {"type": "text", "text": system_prompt},
             ],
         }
     ],
