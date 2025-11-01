@@ -18,7 +18,7 @@ from human_in_loop import (
 from interactive_approval import interactive_approval_cli
 
 # Import report generation and audit trail
-from report_generator import ReportGenerator, ReportType
+from report_generator import ReportGenerator, ReportType, send_llm
 from audit_trail import AuditLogger, AuditEventType, AuditSeverity
 
 # Load environment variables from .env file
@@ -251,6 +251,7 @@ coordinator = Agent(
     handoffs=[front_handoff, legal_handoff, compliance_handoff],
     model="llama-3.3-70b-versatile",
 )
+
 
 # ---------- Example run with Human-in-the-Loop ----------
 async def workflow(report):
@@ -557,6 +558,9 @@ async def workflow(report):
         anomaly_report=report,
         department_results=department_results,
     )
+
+    send_llm(analysis_report)
+
     print(f"   ✅ Transaction Analysis Report: {analysis_report.report_id}")
 
     # Generate compliance decision report
@@ -568,6 +572,9 @@ async def workflow(report):
         execution_plan=execution_plan,
         execution_results=execution_results,
     )
+
+    send_llm(decision_report)
+
     print(f"   ✅ Compliance Decision Report: {decision_report.report_id}")
 
     # Generate executive summary
@@ -578,6 +585,7 @@ async def workflow(report):
         approval_response=approval_response,
         execution_results=execution_results,
     )
+    send_llm(exec_report)
     print(f"   ✅ Executive Summary Report: {exec_report.report_id}")
 
     # Log report generation
@@ -627,3 +635,22 @@ async def workflow(report):
     print(f"  • Audit Trail (Text): {audit_path}")
     print(f"  • Audit Trail (JSON): {audit_json_path}")
     print("=" * 80 + "\n")
+
+
+if __name__ == "__main__":
+    # Example usage with a mock AnomalyReport
+    from anomaly import AnomalyReport
+
+    mock_report = AnomalyReport(
+        transaction_id="TXN-2025-11-01-0001",
+        risk_score=0.92,
+        regulation="MAS Notice 626 13.14(b)",
+        recommendation="Block",
+        evidence="Transaction involves high-risk jurisdiction and unusual amount.",
+        product="cash_deposit",
+        prior_alert_count_30d=3,
+    )
+
+    import asyncio
+
+    asyncio.run(workflow(mock_report))

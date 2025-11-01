@@ -3,12 +3,17 @@
 Report Generation Module
 Creates detailed compliance reports highlighting issues, decisions, and actions
 """
-
+import os
+import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 from enum import Enum
-import json
+from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 class ReportType(str, Enum):
@@ -64,6 +69,32 @@ class ComplianceReport(BaseModel):
     # Metadata
     tags: List[str] = Field(default_factory=list)
     attachments: List[str] = Field(default_factory=list)
+
+
+def send_llm(data: Any) -> str:
+    """Send analysis to LLM for report generation" """
+    system_prompt = f"""
+    Format the following analysis into a structured report. 
+    Use formal language suitable for regulatory review.
+
+    {data}
+    """
+    # send to groq
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    groq_response = client.chat.completions.create(
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        messages=[{"role": "user", "content": system_prompt}],
+    )
+    groq_response = groq_response.choices[0].message.content
+
+    # save in reports/ folder as text file
+    report_folder = "reports/"
+    os.makedirs(report_folder, exist_ok=True)
+    report_path = os.path.join(report_folder, f"{data.report_id}.txt")
+    with open(report_path, "w") as report_file:
+        report_file.write(groq_response)
+
+    return groq_response
 
 
 class ReportGenerator:
@@ -138,7 +169,7 @@ class ReportGenerator:
             if req != "None":
                 reporting_reqs.append(req)
 
-        return ComplianceReport(
+        compliance_report = ComplianceReport(
             report_id=report_id,
             report_type=ReportType.TRANSACTION_ANALYSIS,
             transaction_id=transaction_id,
@@ -151,6 +182,7 @@ class ReportGenerator:
             reporting_requirements=reporting_reqs,
             tags=[anomaly_report.product, anomaly_report.customer_segment or "Unknown"],
         )
+        return compliance_report
 
     def generate_compliance_decision_report(
         self,
@@ -206,6 +238,15 @@ class ReportGenerator:
         actions_taken = [result.details for result in execution_results]
         notifications_sent = list(execution_plan.notification_recipients)
 
+        # Generate recommendations
+        recommendations = []
+        if execution_plan and hasattr(execution_plan, "actions"):
+            recommendations = [
+                f"Execute: {action.value}" for action in execution_plan.actions
+            ]
+        if not recommendations:
+            recommendations = ["Follow standard compliance procedures"]
+
         report = ComplianceReport(
             report_id=report_id,
             report_type=ReportType.COMPLIANCE_DECISION,
@@ -213,6 +254,7 @@ class ReportGenerator:
             executive_summary=executive_summary,
             sections=sections,
             key_issues=key_issues,
+            recommendations=recommendations,
             final_decision=final_decision,
             actions_taken=actions_taken,
             notifications_sent=notifications_sent,
@@ -264,17 +306,40 @@ Status: {'COMPLETED' if all(r.status == 'success' for r in execution_results) el
             )
         ]
 
-        return ComplianceReport(
+        # Generate recommendations for executive summary
+        recommendations = []
+        compliance_result = department_results.get("Compliance", {})
+        if isinstance(compliance_result, dict):
+            final_decision = compliance_result.get("final_decision", "")
+            if final_decision:
+                recommendations.append(f"{final_decision} transaction")
+
+            required_reporting = compliance_result.get("required_reporting", "")
+            if required_reporting and required_reporting != "None":
+                recommendations.append(f"File {required_reporting} report")
+
+        if execution_results:
+            success_count = sum(1 for r in execution_results if r.status == "success")
+            recommendations.append(
+                f"Monitor execution: {success_count}/{len(execution_results)} actions completed"
+            )
+
+        if not recommendations:
+            recommendations = ["Await further instructions"]
+
+        compliance_report = ComplianceReport(
             report_id=report_id,
             report_type=ReportType.EXECUTIVE_SUMMARY,
             transaction_id=transaction_id,
             executive_summary=exec_summary.strip(),
             sections=sections,
+            recommendations=recommendations,
             final_decision=department_results.get("Compliance", {}).get(
                 "final_decision", "Pending"
             ),
             tags=["executive", "summary"],
         )
+        return compliance_report
 
     # Helper methods for section creation
 
@@ -640,6 +705,10 @@ Risk Mitigation Actions Completed:
                 recommendations.append(
                     "Prepare customer notification with legal review"
                 )
+
+        # Ensure recommendations is always a list
+        if not recommendations:
+            recommendations = ["Follow standard compliance procedures"]
 
         return recommendations
 
