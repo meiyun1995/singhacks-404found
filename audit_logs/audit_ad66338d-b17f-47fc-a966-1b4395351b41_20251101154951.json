@@ -1,0 +1,272 @@
+{
+  "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+  "started_at": "2025-11-01T15:49:48.560026",
+  "completed_at": "2025-11-01T15:49:51.854061",
+  "events": [
+    {
+      "event_id": "EVT-20251101154948-00001",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:48.560134",
+      "event_type": "anomaly_detected",
+      "severity": "warning",
+      "description": "Anomaly detected with risk score 0.65",
+      "actor": "Anomaly Detection Agent",
+      "component": "AnomalyDetector",
+      "event_data": {
+        "risk_score": 0.65,
+        "regulation": "HKMA",
+        "recommendation": "Monitor",
+        "evidence": "The transaction involves a large amount of HKD 590,012.92, with the originator in AE (United Arab Emirates) and beneficiary in CN (China). The customer risk rating is 'Low', but the transaction amount and cross-border nature raise concerns. Sanctions screening flagged 'potential' issues. Regulatory rules from HKMA require enhanced due diligence for high-risk jurisdictions and transactions."
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": 0.65,
+      "decision": "Monitor",
+      "tags": [
+        "anomaly",
+        "detection"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154948-00002",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:48.560252",
+      "event_type": "agent_routing",
+      "severity": "info",
+      "description": "Starting multi-agent coordination",
+      "actor": "System",
+      "component": "Coordinator",
+      "event_data": {},
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "routing",
+        "start"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00003",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.849891",
+      "event_type": "agent_routing",
+      "severity": "info",
+      "description": "Transaction routed to 0 department agents",
+      "actor": "Coordinator Agent",
+      "component": "AgentRouter",
+      "event_data": {
+        "routed_agents": [],
+        "routing_logic": "Risk score 0.65 and regulation HKMA"
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "routing",
+        "multi-agent"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00004",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.850235",
+      "event_type": "execution_plan_created",
+      "severity": "info",
+      "description": "Execution plan created (standard): 2 actions",
+      "actor": "Action Executor",
+      "component": "ExecutionPlanner",
+      "event_data": {
+        "plan_type": "standard",
+        "actions": [
+          "monitor_only",
+          "contact_customer"
+        ],
+        "notification_channels": [
+          "email",
+          "dashboard"
+        ],
+        "recipients": [
+          "compliance@bank.com.sg"
+        ],
+        "rollback_plan": null
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "execution",
+        "planning",
+        "standard"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00005",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.850708",
+      "event_type": "action_executed",
+      "severity": "info",
+      "description": "Action contact_customer: success",
+      "actor": "Action Executor",
+      "component": "ActionExecutor",
+      "event_data": {
+        "action": "contact_customer",
+        "status": "success",
+        "details": "Customer notification sent via SMS and email. Ticket ID: TKT-ad66338d-b17f-47fc-a966-1b4395351b41",
+        "error_message": null
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "execution",
+        "action",
+        "contact_customer"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00006",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.850792",
+      "event_type": "action_executed",
+      "severity": "info",
+      "description": "Action monitor_only: success",
+      "actor": "Action Executor",
+      "component": "ActionExecutor",
+      "event_data": {
+        "action": "monitor_only",
+        "status": "success",
+        "details": "Transaction added to monitoring watchlist. Monitor ID: MON-ad66338d-b17f-47fc-a966-1b4395351b41",
+        "error_message": null
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "execution",
+        "action",
+        "monitor_only"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00007",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.850886",
+      "event_type": "notification_sent",
+      "severity": "info",
+      "description": "Notifications sent via 2 channels to 1 recipients",
+      "actor": "Notification System",
+      "component": "NotificationHandler",
+      "event_data": {
+        "channels": [
+          "email",
+          "dashboard"
+        ],
+        "recipients": [
+          "compliance@bank.com.sg"
+        ]
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "notification"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00008",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.851836",
+      "event_type": "report_generated",
+      "severity": "info",
+      "description": "Report generated: RPT-20251101-0001 (transaction_analysis)",
+      "actor": "Report Generator",
+      "component": "ReportGenerator",
+      "event_data": {
+        "report_id": "RPT-20251101-0001",
+        "report_type": "transaction_analysis"
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "report",
+        "transaction_analysis"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00009",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.851923",
+      "event_type": "report_generated",
+      "severity": "info",
+      "description": "Report generated: RPT-20251101-0002 (compliance_decision)",
+      "actor": "Report Generator",
+      "component": "ReportGenerator",
+      "event_data": {
+        "report_id": "RPT-20251101-0002",
+        "report_type": "compliance_decision"
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "report",
+        "compliance_decision"
+      ],
+      "related_events": []
+    },
+    {
+      "event_id": "EVT-20251101154951-00010",
+      "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+      "timestamp": "2025-11-01T15:49:51.852001",
+      "event_type": "report_generated",
+      "severity": "info",
+      "description": "Report generated: RPT-EXEC-20251101-0003 (executive_summary)",
+      "actor": "Report Generator",
+      "component": "ReportGenerator",
+      "event_data": {
+        "report_id": "RPT-EXEC-20251101-0003",
+        "report_type": "executive_summary"
+      },
+      "previous_state": null,
+      "new_state": null,
+      "risk_score": null,
+      "decision": null,
+      "tags": [
+        "report",
+        "executive_summary"
+      ],
+      "related_events": []
+    }
+  ],
+  "total_events": 10,
+  "critical_events": 0,
+  "warnings": 1,
+  "errors": 0,
+  "anomaly_detected_at": "2025-11-01T15:49:48.560134",
+  "approval_requested_at": null,
+  "approval_received_at": null,
+  "execution_completed_at": "2025-11-01T15:49:51.854122",
+  "tags": [
+    "compliance",
+    "fx_conversion",
+    "high_risk"
+  ],
+  "attachments": []
+}

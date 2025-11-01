@@ -1,0 +1,194 @@
+body {
+    font-family: "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: #333;
+}
+
+.dashboard-container {
+    width: 95%;
+    margin: 30px auto;
+}
+
+/* --- Summary Panels --- */
+.summary-panels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;  /* reduce spacing below */
+    gap: 15px;
+}
+
+.panel {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.05); /* slightly lighter shadow */
+    padding: 15px 10px;  /* smaller padding */
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.panel:hover {
+    transform: translateY(-3px);
+}
+
+.panel h2 {
+    font-size: 1rem;  /* smaller heading */
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.panel p {
+    font-size: 1.5rem; /* smaller main number */
+    font-weight: bold;
+    color: #2a4d69;
+}
+
+.total-transactions p {
+    color: #1e88e5;
+}
+
+.action-required p {
+    color: #e53935;
+}
+
+/* --- Table Section --- */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 15px 15px;  /* smaller padding */
+}
+
+.table-container h2 {
+    margin-bottom: 10px;
+    color: #2a4d69;
+    cursor: default;
+    font-size: 1.2rem; /* slightly smaller heading */
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;  /* smaller font */
+}
+
+thead {
+    background-color: #2a4d69;
+    color: white;
+}
+
+th, td {
+    padding: 8px 6px;    /* smaller padding */
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Risk highlighting */
+.high-risk {
+    color: red;
+    font-weight: bold;
+}
+
+.low-risk {
+    color: green;
+    font-weight: 500;
+}
+
+/* --- Dashboard Title Panel (smaller) --- */
+.title-panel {
+    background: #2a4d69;
+    color: white;
+    text-align: left;
+    padding: 15px 20px;  /* smaller padding */
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    margin-bottom: 20px; /* reduce spacing below */
+}
+
+.title-panel h1 {
+    margin: 0;
+    font-size: 1.5rem;   /* smaller font */
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* --- Clickable table rows --- */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.clickable-row:hover {
+    background-color: #e8f0fe; /* light highlight on hover */
+}
+
+/* --- Detail Page Header --- */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.detail-header h2 {
+    margin: 0;
+    color: #2a4d69;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.back-button {
+    text-decoration: none;
+    background-color: #2a4d69;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.back-button:hover {
+    background-color: #1e3550;
+}
+
+/* --- Transaction Detail Card --- */
+.transaction-detail-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 25px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: 600;
+    color: #555;
+}
+
+.value {
+    font-weight: 500;
+    color: #333;
+    text-align: right;
+}
+
+.value.high-risk {
+    color: red;
+    font-weight: bold;
+}

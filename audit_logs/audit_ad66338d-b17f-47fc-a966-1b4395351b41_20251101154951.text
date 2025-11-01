@@ -1,0 +1,149 @@
+================================================================================
+AUDIT TRAIL: ad66338d-b17f-47fc-a966-1b4395351b41
+================================================================================
+Started: 2025-11-01 15:49:48
+Completed: 2025-11-01 15:49:51
+Duration: 3.29 seconds
+
+Total Events: 10
+Critical Events: 0
+Warnings: 1
+Errors: 0
+================================================================================
+
+EVENT LOG
+--------------------------------------------------------------------------------
+
+[1] ⚠️ ANOMALY_DETECTED
+    Time: 2025-11-01 15:49:48
+    Actor: Anomaly Detection Agent
+    Component: AnomalyDetector
+    Description: Anomaly detected with risk score 0.65
+    Risk Score: 0.65
+    Decision: Monitor
+    Data: {
+        "risk_score": 0.65,
+        "regulation": "HKMA",
+        "recommendation": "Monitor",
+        "evidence": "The transaction involves a large amount of HKD 590,012.92, with the originator in AE (United Arab Emirates) and beneficiary in CN (China). The customer risk rating is 'Low', but the transaction amount and cross-border nature raise concerns. Sanctions screening flagged 'potential' issues. Regulatory rules from HKMA require enhanced due diligence for high-risk jurisdictions and transactions."
+}
+    Tags: anomaly, detection
+
+[2] ℹ️ AGENT_ROUTING
+    Time: 2025-11-01 15:49:48
+    Actor: System
+    Component: Coordinator
+    Description: Starting multi-agent coordination
+    Tags: routing, start
+
+[3] ℹ️ AGENT_ROUTING
+    Time: 2025-11-01 15:49:51
+    Actor: Coordinator Agent
+    Component: AgentRouter
+    Description: Transaction routed to 0 department agents
+    Data: {
+        "routed_agents": [],
+        "routing_logic": "Risk score 0.65 and regulation HKMA"
+}
+    Tags: routing, multi-agent
+
+[4] ℹ️ EXECUTION_PLAN_CREATED
+    Time: 2025-11-01 15:49:51
+    Actor: Action Executor
+    Component: ExecutionPlanner
+    Description: Execution plan created (standard): 2 actions
+    Data: {
+        "plan_type": "standard",
+        "actions": [
+                "monitor_only",
+                "contact_customer"
+        ],
+        "notification_channels": [
+                "email",
+                "dashboard"
+        ],
+        "recipients": [
+                "compliance@bank.com.sg"
+        ],
+        "rollback_plan": null
+}
+    Tags: execution, planning, standard
+
+[5] ℹ️ ACTION_EXECUTED
+    Time: 2025-11-01 15:49:51
+    Actor: Action Executor
+    Component: ActionExecutor
+    Description: Action contact_customer: success
+    Data: {
+        "action": "contact_customer",
+        "status": "success",
+        "details": "Customer notification sent via SMS and email. Ticket ID: TKT-ad66338d-b17f-47fc-a966-1b4395351b41",
+        "error_message": null
+}
+    Tags: execution, action, contact_customer
+
+[6] ℹ️ ACTION_EXECUTED
+    Time: 2025-11-01 15:49:51
+    Actor: Action Executor
+    Component: ActionExecutor
+    Description: Action monitor_only: success
+    Data: {
+        "action": "monitor_only",
+        "status": "success",
+        "details": "Transaction added to monitoring watchlist. Monitor ID: MON-ad66338d-b17f-47fc-a966-1b4395351b41",
+        "error_message": null
+}
+    Tags: execution, action, monitor_only
+
+[7] ℹ️ NOTIFICATION_SENT
+    Time: 2025-11-01 15:49:51
+    Actor: Notification System
+    Component: NotificationHandler
+    Description: Notifications sent via 2 channels to 1 recipients
+    Data: {
+        "channels": [
+                "email",
+                "dashboard"
+        ],
+        "recipients": [
+                "compliance@bank.com.sg"
+        ]
+}
+    Tags: notification
+
+[8] ℹ️ REPORT_GENERATED
+    Time: 2025-11-01 15:49:51
+    Actor: Report Generator
+    Component: ReportGenerator
+    Description: Report generated: RPT-20251101-0001 (transaction_analysis)
+    Data: {
+        "report_id": "RPT-20251101-0001",
+        "report_type": "transaction_analysis"
+}
+    Tags: report, transaction_analysis
+
+[9] ℹ️ REPORT_GENERATED
+    Time: 2025-11-01 15:49:51
+    Actor: Report Generator
+    Component: ReportGenerator
+    Description: Report generated: RPT-20251101-0002 (compliance_decision)
+    Data: {
+        "report_id": "RPT-20251101-0002",
+        "report_type": "compliance_decision"
+}
+    Tags: report, compliance_decision
+
+[10] ℹ️ REPORT_GENERATED
+    Time: 2025-11-01 15:49:51
+    Actor: Report Generator
+    Component: ReportGenerator
+    Description: Report generated: RPT-EXEC-20251101-0003 (executive_summary)
+    Data: {
+        "report_id": "RPT-EXEC-20251101-0003",
+        "report_type": "executive_summary"
+}
+    Tags: report, executive_summary
+
+================================================================================
+END OF AUDIT TRAIL - ad66338d-b17f-47fc-a966-1b4395351b41
+================================================================================

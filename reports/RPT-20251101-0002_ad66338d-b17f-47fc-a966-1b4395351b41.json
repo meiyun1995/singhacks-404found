@@ -1,0 +1,67 @@
+{
+  "report_id": "RPT-20251101-0002",
+  "report_type": "compliance_decision",
+  "transaction_id": "ad66338d-b17f-47fc-a966-1b4395351b41",
+  "generated_at": "2025-11-01T15:49:51.851606",
+  "generated_by": "Compliance System",
+  "executive_summary": "Compliance decision for transaction ad66338d-b17f-47fc-a966-1b4395351b41 has been executed.\nNo approval required\nActions: 2 planned actions\nRisk Score: 0.65\nRegulation: HKMA",
+  "sections": [
+    {
+      "title": "Decision Overview",
+      "content": "Original Recommendation: Monitor\nFinal Decision: Pending\nApproval Required: No",
+      "severity": null,
+      "highlights": [
+        "Final Decision: Pending",
+        "Approval: Not Required"
+      ],
+      "metrics": {}
+    },
+    {
+      "title": "Action Execution",
+      "content": "Planned Actions: 2\nExecuted Actions: 2\nSuccess Rate: 2/2\n\nExecution Details:\n\n1. ✅ contact_customer: Customer notification sent via SMS and email. Ticket ID: TKT-ad66338d-b17f-47fc-a966-1b4395351b41\n2. ✅ monitor_only: Transaction added to monitoring watchlist. Monitor ID: MON-ad66338d-b17f-47fc-a966-1b4395351b41",
+      "severity": null,
+      "highlights": [
+        "2 actions executed",
+        "Success: 2/2"
+      ],
+      "metrics": {
+        "planned_actions": 2,
+        "executed_actions": 2,
+        "success_count": 2
+      }
+    },
+    {
+      "title": "Risk Mitigation",
+      "content": "Notification Channels: email, dashboard\nRecipients Notified: 1\nRecipients: compliance@bank.com.sg\n\nRisk Mitigation Actions Completed:\n\n✅ contact_customer\n✅ monitor_only",
+      "severity": null,
+      "highlights": [
+        "1 recipients notified",
+        "2 actions successful"
+      ],
+      "metrics": {}
+    }
+  ],
+  "key_issues": [],
+  "recommendations": [],
+  "risk_indicators": {},
+  "final_decision": "Monitor",
+  "approval_status": null,
+  "approver_name": null,
+  "approver_comments": null,
+  "actions_taken": [
+    "Customer notification sent via SMS and email. Ticket ID: TKT-ad66338d-b17f-47fc-a966-1b4395351b41",
+    "Transaction added to monitoring watchlist. Monitor ID: MON-ad66338d-b17f-47fc-a966-1b4395351b41"
+  ],
+  "notifications_sent": [
+    "compliance@bank.com.sg"
+  ],
+  "regulations_involved": [
+    "HKMA"
+  ],
+  "reporting_requirements": [],
+  "tags": [
+    "compliance_decision",
+    "fx_conversion"
+  ],
+  "attachments": []
+}

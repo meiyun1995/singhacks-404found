@@ -1,18 +1,13 @@
 # compliance_router.py
 import os
 import json
-import sys
 from dotenv import load_dotenv
-from typing import List, Optional
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-from pydantic import BaseModel, Field, conint, confloat
+from typing import Optional
+from pydantic import BaseModel
 from agents import Agent, Runner, handoff
 from agents.extensions import handoff_filters
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+
 
 # Import human-in-the-loop components
 from human_in_loop import (
@@ -47,18 +42,6 @@ class Department(str):
     FRONT = "FrontOffice"
     LEGAL = "Legal"
     COMPLIANCE = "Compliance"
-
-
-class AnomalyReport(BaseModel):
-    # Output of your Agent (2)
-    transaction_id: str
-    product: Literal["CASA", "Cards", "Loans", "Trade", "Wealth", "Others"]
-    risk_score: confloat(ge=0.0, le=1.0)
-    regulation: str  # e.g., "MAS Notice 626 13.14(b)"
-    evidence: str  # concise, salient points / excerpts
-    recommendation: Literal["Block", "Monitor", "Allow", "Escalate"]
-    customer_segment: Optional[str] = None
-    prior_alert_count_30d: Optional[conint(ge=0)] = 0
 
 
 # Optional: input payload that gets passed during handoff
@@ -270,8 +253,7 @@ coordinator = Agent(
 )
 
 # ---------- Example run with Human-in-the-Loop ----------
-
-if __name__ == "__main__":
+async def workflow(report):
     print("\n" + "=" * 80)
     print("🏦 COMPLIANCE WORKFLOW WITH HUMAN-IN-THE-LOOP")
     print("=" * 80 + "\n")
@@ -279,18 +261,6 @@ if __name__ == "__main__":
     # Initialize audit logger and report generator
     audit_logger = AuditLogger()
     report_generator = ReportGenerator()
-
-    # Example anomaly report from Agent (2)
-    report = AnomalyReport(
-        transaction_id="TXN-2025-11-01-0001",
-        product="Cards",
-        risk_score=0.86,
-        regulation="MAS Notice 626 13.14(b)",
-        evidence="Multiple high-value cross-border card-not-present transactions in <24h; device fingerprint mismatch; MCC 4829; IP geolocation flag.",
-        recommendation="Block",
-        customer_segment="Retail",
-        prior_alert_count_30d=2,
-    )
 
     # Start audit trail
     audit_logger.start_audit_trail(
@@ -327,7 +297,7 @@ if __name__ == "__main__":
         tags=["routing", "start"],
     )
 
-    result = Runner.run_sync(
+    result = await Runner.run(
         coordinator,
         f"ANOMALY REPORT JSON:\n{report.model_dump_json(indent=2)}\n"
         "Decide routing, call relevant department handoff tools with DeptHandoffInput, "
