@@ -16,6 +16,10 @@ from human_in_loop import (
 )
 from interactive_approval import interactive_approval_cli
 
+# Import report generation and audit trail
+from report_generator import ReportGenerator, ReportType
+from audit_trail import AuditLogger, AuditEventType, AuditSeverity
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -266,6 +270,10 @@ if __name__ == "__main__":
     print("🏦 COMPLIANCE WORKFLOW WITH HUMAN-IN-THE-LOOP")
     print("=" * 80 + "\n")
 
+    # Initialize audit logger and report generator
+    audit_logger = AuditLogger()
+    report_generator = ReportGenerator()
+
     # Example anomaly report from Agent (2)
     report = AnomalyReport(
         transaction_id="TXN-2025-11-01-0001",
@@ -278,15 +286,40 @@ if __name__ == "__main__":
         prior_alert_count_30d=2,
     )
 
+    # Start audit trail
+    audit_logger.start_audit_trail(
+        transaction_id=report.transaction_id,
+        tags=["compliance", report.product, "high_risk"],
+    )
+
     print("📊 STEP 1: Anomaly Detection")
     print(f"   Transaction ID: {report.transaction_id}")
     print(f"   Risk Score: {report.risk_score}")
     print(f"   Recommendation: {report.recommendation}")
     print(f"   Prior Alerts (30d): {report.prior_alert_count_30d}")
 
+    # Log anomaly detection
+    audit_logger.log_anomaly_detection(
+        transaction_id=report.transaction_id,
+        risk_score=report.risk_score,
+        regulation=report.regulation,
+        recommendation=report.recommendation,
+        evidence=report.evidence,
+    )
+
     # STEP 1: Run multi-agent coordination
     print("\n🤖 STEP 2: Multi-Agent Coordination")
     print("   Running coordinator agent to route to departments...")
+
+    # Log agent routing start
+    audit_logger.log_event(
+        transaction_id=report.transaction_id,
+        event_type=AuditEventType.AGENT_ROUTING,
+        description="Starting multi-agent coordination",
+        actor="System",
+        component="Coordinator",
+        tags=["routing", "start"],
+    )
 
     result = Runner.run_sync(
         coordinator,
@@ -321,6 +354,15 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n⚠️  Warning: Could not parse coordinator output as JSON: {e}")
         print("   Proceeding with mock data for demonstration...")
+
+        # Log error
+        audit_logger.log_error(
+            transaction_id=report.transaction_id,
+            error_message=f"Failed to parse coordinator output: {str(e)}",
+            component="Coordinator",
+            error_details={"output": str(coordinator_output)[:200]},
+        )
+
         coordinator_data = {
             "routed_agents": ["FrontOffice", "Legal", "Compliance"],
             "department_results": {
@@ -332,6 +374,23 @@ if __name__ == "__main__":
                 "Compliance": {"final_decision": "Block", "required_reporting": "MAS"},
             },
         }
+
+    # Log department analysis results
+    routed_agents = coordinator_data.get("routed_agents", [])
+    audit_logger.log_agent_routing(
+        transaction_id=report.transaction_id,
+        routed_agents=routed_agents,
+        routing_logic=f"Risk score {report.risk_score} and regulation {report.regulation}",
+    )
+
+    for dept, result in coordinator_data.get("department_results", {}).items():
+        audit_logger.log_department_analysis(
+            transaction_id=report.transaction_id,
+            department=dept,
+            analysis_result=(
+                result if isinstance(result, dict) else {"result": str(result)}
+            ),
+        )
 
     # STEP 2: Check if human approval is needed
     print("\n🔍 STEP 3: Human-in-the-Loop Decision Check")
@@ -353,10 +412,42 @@ if __name__ == "__main__":
     if needs_approval and approval_request:
         print("   ⚠️  Human approval REQUIRED")
 
+        # Log approval request
+        audit_logger.log_approval_request(
+            transaction_id=report.transaction_id, approval_request=approval_request
+        )
+
         # Simulate human approval (in production, this would be interactive)
         # approval_response = simulate_human_approval(approval_request)
         # Use interactive CLI instead of simulation
         approval_response = interactive_approval_cli(approval_request)
+
+        # Log approval response
+        audit_logger.log_approval_response(
+            transaction_id=report.transaction_id, approval_response=approval_response
+        )
+
+        # Log if decision was modified
+        if approval_response.decision and any(
+            kw in approval_response.decision.lower() for kw in ["modify", "change"]
+        ):
+            audit_logger.log_decision_modification(
+                transaction_id=report.transaction_id,
+                original_decision=report.recommendation,
+                modified_decision=approval_response.decision,
+                modifier=approval_response.approver_name,
+                reason=approval_response.comments or "Management decision",
+            )
+
+        # Log if escalated
+        if approval_response.status.value == "escalated":
+            audit_logger.log_escalation(
+                transaction_id=report.transaction_id,
+                escalated_to="Senior Management / Executive Committee",
+                reason=approval_response.comments
+                or "Requires higher authority approval",
+                escalated_by=approval_response.approver_name,
+            )
 
         print(f"\n   Decision: {approval_response.status.value.upper()}")
         print(
@@ -384,12 +475,45 @@ if __name__ == "__main__":
         approval_response=approval_response,
     )
 
+    # Determine plan type for logging
+    plan_type = "standard"
+    if approval_response:
+        if approval_response.status.value == "rejected":
+            plan_type = "rejection"
+        elif approval_response.status.value == "escalated":
+            plan_type = "escalation"
+        elif (
+            approval_response.decision
+            and "modify" in approval_response.decision.lower()
+        ):
+            plan_type = "modified"
+
+    # Log execution plan creation
+    audit_logger.log_execution_plan_created(
+        transaction_id=report.transaction_id,
+        execution_plan=execution_plan,
+        plan_type=plan_type,
+    )
+
     print(
         f"\n   Actions planned: {[action.value for action in execution_plan.actions]}"
     )
 
     # Execute the plan
     execution_results = executor.execute_plan(execution_plan)
+
+    # Log each action execution
+    for result in execution_results:
+        audit_logger.log_action_execution(
+            transaction_id=report.transaction_id, action_result=result
+        )
+
+    # Log notifications
+    audit_logger.log_notification_sent(
+        transaction_id=report.transaction_id,
+        channels=[ch.value for ch in execution_plan.notification_channels],
+        recipients=execution_plan.notification_recipients,
+    )
 
     # STEP 4: Summary
     print("\n" + "=" * 80)
@@ -448,4 +572,82 @@ if __name__ == "__main__":
         status_icon = "✅" if result.status == "success" else "❌"
         print(f"   {i}. {status_icon} {result.action.value}: {result.details}")
 
+    # STEP 5: Generate Reports
+    print("\n📄 STEP 5: Report Generation")
+
+    # Generate transaction analysis report
+    analysis_report = report_generator.generate_transaction_analysis_report(
+        transaction_id=report.transaction_id,
+        anomaly_report=report,
+        department_results=department_results,
+    )
+    print(f"   ✅ Transaction Analysis Report: {analysis_report.report_id}")
+
+    # Generate compliance decision report
+    decision_report = report_generator.generate_compliance_decision_report(
+        transaction_id=report.transaction_id,
+        anomaly_report=report,
+        department_results=department_results,
+        approval_response=approval_response,
+        execution_plan=execution_plan,
+        execution_results=execution_results,
+    )
+    print(f"   ✅ Compliance Decision Report: {decision_report.report_id}")
+
+    # Generate executive summary
+    exec_report = report_generator.generate_executive_summary_report(
+        transaction_id=report.transaction_id,
+        anomaly_report=report,
+        department_results=department_results,
+        approval_response=approval_response,
+        execution_results=execution_results,
+    )
+    print(f"   ✅ Executive Summary Report: {exec_report.report_id}")
+
+    # Log report generation
+    for rpt in [analysis_report, decision_report, exec_report]:
+        audit_logger.log_report_generated(
+            transaction_id=report.transaction_id,
+            report_id=rpt.report_id,
+            report_type=rpt.report_type.value,
+        )
+
+    # Save reports
+    print("\n💾 Saving Reports...")
+    analysis_path = report_generator.save_report(analysis_report, format="text")
+    decision_path = report_generator.save_report(decision_report, format="text")
+    exec_path = report_generator.save_report(exec_report, format="text")
+
+    decision_json_path = report_generator.save_report(decision_report, format="json")
+
+    print(f"   ✅ Reports saved to ./reports/")
+
+    # Complete audit trail
+    audit_logger.complete_audit_trail(report.transaction_id)
+
+    # Save audit trail
+    print("\n📋 STEP 6: Audit Trail")
+    audit_path = audit_logger.save_audit_trail(report.transaction_id, format="text")
+    audit_json_path = audit_logger.save_audit_trail(
+        report.transaction_id, format="json"
+    )
+    print(f"   ✅ Audit trail saved: {audit_path}")
+
+    # Print audit summary
+    print("\n" + audit_logger.generate_audit_summary(report.transaction_id))
+
     print("\n✨ Workflow completed successfully!\n")
+
+    # Print file paths summary
+    print("\n" + "=" * 80)
+    print("📁 GENERATED FILES")
+    print("=" * 80)
+    print(f"Reports:")
+    print(f"  • Transaction Analysis: {analysis_path}")
+    print(f"  • Compliance Decision: {decision_path}")
+    print(f"  • Executive Summary: {exec_path}")
+    print(f"  • Decision (JSON): {decision_json_path}")
+    print(f"\nAudit Logs:")
+    print(f"  • Audit Trail (Text): {audit_path}")
+    print(f"  • Audit Trail (JSON): {audit_json_path}")
+    print("=" * 80 + "\n")
