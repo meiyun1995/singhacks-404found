@@ -63,7 +63,6 @@ fastapi run app.py --port 8100
 | 4  | document analysis engine    | document_analysis/pipeline.py  | Agent will process and analyze the user uploaded document for any errors, inconsistencies, image integrity issues, and provide a risk score.                                                                                                                                                                                                                                |
 | 5  | integrated dashboard        | ui/app.py                      | UI mock-up of how service 1 - 4 will integrate together into a seamless workflow.                                                                                                                                                                                                                                                                                           |
 ## System Workflow
-
 TODO: story which will overlap with the video, "script"
 
 System overview
