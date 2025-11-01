@@ -25,7 +25,7 @@ def interactive_approval_cli(
     print("🚨 COMPLIANCE APPROVAL REQUEST 🚨")
     print("=" * 80)
     print(f"\n📋 Case Details:")
-    print(f"   Case ID: {approval_request.case_id}")
+    print(f"   Transaction ID: {approval_request.transaction_id}")
     print(f"   Timestamp: {approval_request.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"   Urgency: {approval_request.urgency}")
     print(f"   Risk Score: {approval_request.risk_score:.2f}")
@@ -71,7 +71,7 @@ def interactive_approval_cli(
             comments = input("Comments (optional): ").strip()
 
             return HumanApprovalResponse(
-                case_id=approval_request.case_id,
+                transaction_id=approval_request.transaction_id,
                 approver_name=approver_name,
                 approver_role=approval_request.approver_role,
                 status=ApprovalStatus.APPROVED,
@@ -104,7 +104,7 @@ def interactive_approval_cli(
             comments = input("Comments explaining modifications: ").strip()
 
             return HumanApprovalResponse(
-                case_id=approval_request.case_id,
+                transaction_id=approval_request.transaction_id,
                 approver_name=approver_name,
                 approver_role=approval_request.approver_role,
                 status=ApprovalStatus.APPROVED,
@@ -120,7 +120,7 @@ def interactive_approval_cli(
             alternative = input("Alternative recommendation: ").strip()
 
             return HumanApprovalResponse(
-                case_id=approval_request.case_id,
+                transaction_id=approval_request.transaction_id,
                 approver_name=approver_name,
                 approver_role=approval_request.approver_role,
                 status=ApprovalStatus.REJECTED,
@@ -134,7 +134,7 @@ def interactive_approval_cli(
             escalation_reason = input("Reason for escalation: ").strip()
 
             return HumanApprovalResponse(
-                case_id=approval_request.case_id,
+                transaction_id=approval_request.transaction_id,
                 approver_name=approver_name,
                 approver_role=approval_request.approver_role,
                 status=ApprovalStatus.ESCALATED,
@@ -173,7 +173,7 @@ def print_approval_dashboard(requests: list[HumanApprovalRequest]):
             "Low": "🟢",
         }.get(req.urgency, "⚪")
 
-        print(f"{i}. {urgency_icon} {req.case_id}")
+        print(f"{i}. {urgency_icon} {req.transaction_id}")
         print(
             f"   Risk: {req.risk_score:.2f} | Urgency: {req.urgency} | Approver: {req.approver_role}"
         )
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     sample_requests = [
         HumanApprovalRequest(
-            case_id="C-2025-11-01-0001",
+            transaction_id="TXN-2025-11-01-0001",
             risk_score=0.92,
             regulation="MAS Notice 626 13.14(b)",
             recommended_action="Block",
@@ -201,7 +201,7 @@ if __name__ == "__main__":
             urgency="Critical",
         ),
         HumanApprovalRequest(
-            case_id="C-2025-11-01-0002",
+            transaction_id="TXN-2025-11-01-0002",
             risk_score=0.78,
             regulation="MAS TRM Guidelines",
             recommended_action="Monitor",

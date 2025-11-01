@@ -40,7 +40,7 @@ class Department(str):
 
 class AnomalyReport(BaseModel):
     # Output of your Agent (2)
-    case_id: str
+    transaction_id: str
     product: Literal["CASA", "Cards", "Loans", "Trade", "Wealth", "Others"]
     risk_score: confloat(ge=0.0, le=1.0)
     regulation: str  # e.g., "MAS Notice 626 13.14(b)"
@@ -52,7 +52,7 @@ class AnomalyReport(BaseModel):
 
 # Optional: input payload that gets passed during handoff
 class DeptHandoffInput(BaseModel):
-    case_id: str
+    transaction_id: str
     risk_score: float
     regulation: str
     evidence: str
@@ -267,7 +267,7 @@ if __name__ == "__main__":
 
     # Example anomaly report from Agent (2)
     report = AnomalyReport(
-        case_id="C-2025-11-01-0001",
+        transaction_id="TXN-2025-11-01-0001",
         product="Cards",
         risk_score=0.86,
         regulation="MAS Notice 626 13.14(b)",
@@ -278,7 +278,7 @@ if __name__ == "__main__":
     )
 
     print("📊 STEP 1: Anomaly Detection")
-    print(f"   Case ID: {report.case_id}")
+    print(f"   Transaction ID: {report.transaction_id}")
     print(f"   Risk Score: {report.risk_score}")
     print(f"   Recommendation: {report.recommendation}")
     print(f"   Prior Alerts (30d): {report.prior_alert_count_30d}")
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     department_results = coordinator_data.get("department_results", {})
 
     needs_approval, approval_request = hitl_engine.requires_human_approval(
-        case_id=report.case_id,
+        transaction_id=report.transaction_id,
         risk_score=report.risk_score,
         regulation=report.regulation,
         recommendation=report.recommendation,
@@ -375,7 +375,7 @@ if __name__ == "__main__":
 
     # Create execution plan
     execution_plan = executor.create_execution_plan(
-        case_id=report.case_id,
+        transaction_id=report.transaction_id,
         final_decision=final_decision,
         department_results=department_results,
         approval_response=approval_response,
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     print("\n" + "=" * 80)
     print("📊 WORKFLOW SUMMARY")
     print("=" * 80)
-    print(f"Case ID: {report.case_id}")
+    print(f"Transaction ID: {report.transaction_id}")
     print(f"Risk Score: {report.risk_score}")
     print(f"Agents Involved: {', '.join(coordinator_data.get('routed_agents', []))}")
     print(

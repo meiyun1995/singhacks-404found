@@ -39,7 +39,7 @@ class ActionType(str, Enum):
 class HumanApprovalRequest(BaseModel):
     """Request for human approval on a compliance decision"""
 
-    case_id: str
+    transaction_id: str
     timestamp: datetime = Field(default_factory=datetime.now)
     risk_score: float
     regulation: str
@@ -56,7 +56,7 @@ class HumanApprovalRequest(BaseModel):
 class HumanApprovalResponse(BaseModel):
     """Human's response to approval request"""
 
-    case_id: str
+    transaction_id: str
     approver_name: str
     approver_role: str
     status: ApprovalStatus
@@ -69,7 +69,7 @@ class HumanApprovalResponse(BaseModel):
 class ActionExecutionPlan(BaseModel):
     """Plan for executing approved actions"""
 
-    case_id: str
+    transaction_id: str
     actions: List[ActionType]
     execution_order: List[int]  # Order in which to execute actions
     notification_channels: List[NotificationChannel]
@@ -81,7 +81,7 @@ class ActionExecutionPlan(BaseModel):
 class ActionExecutionResult(BaseModel):
     """Result of action execution"""
 
-    case_id: str
+    transaction_id: str
     action: ActionType
     status: Literal["success", "failed", "partial"]
     executed_at: datetime = Field(default_factory=datetime.now)
@@ -103,7 +103,7 @@ class HumanInLoopDecisionEngine:
 
     def requires_human_approval(
         self,
-        case_id: str,
+        transaction_id: str,
         risk_score: float,
         regulation: str,
         recommendation: str,
@@ -173,7 +173,7 @@ class HumanInLoopDecisionEngine:
 
         if reasons:
             approval_request = HumanApprovalRequest(
-                case_id=case_id,
+                transaction_id=transaction_id,
                 risk_score=risk_score,
                 regulation=regulation,
                 recommended_action=recommendation,
@@ -214,7 +214,7 @@ class ActionExecutor:
 
     def create_execution_plan(
         self,
-        case_id: str,
+        transaction_id: str,
         final_decision: str,
         department_results: Dict[str, Any],
         approval_response: Optional[HumanApprovalResponse] = None,
@@ -283,23 +283,25 @@ class ActionExecutor:
         )
 
         return ActionExecutionPlan(
-            case_id=case_id,
+            transaction_id=transaction_id,
             actions=actions,
             execution_order=execution_order,
             notification_channels=notification_channels,
             notification_recipients=recipients,
         )
 
-    def execute_action(self, case_id: str, action: ActionType) -> ActionExecutionResult:
+    def execute_action(
+        self, transaction_id: str, action: ActionType
+    ) -> ActionExecutionResult:
         """
         Execute a single action (mock implementation)
         In production, this would call actual banking systems
         """
-        print(f"\n🔧 Executing action: {action.value} for case {case_id}")
+        print(f"\n🔧 Executing action: {action.value} for transaction {transaction_id}")
 
         # Mock execution - in real system, call actual APIs
         result = ActionExecutionResult(
-            case_id=case_id,
+            transaction_id=transaction_id,
             action=action,
             status="success",
             details=f"Action {action.value} executed successfully",
@@ -308,20 +310,22 @@ class ActionExecutor:
         # Simulate different execution scenarios
         if action == ActionType.BLOCK_CARD:
             result.details = (
-                "Card blocked in core banking system. Block ID: BLK-" + case_id
+                "Card blocked in core banking system. Block ID: BLK-" + transaction_id
             )
         elif action == ActionType.CONTACT_CUSTOMER:
             result.details = (
                 "Customer notification sent via SMS and email. Ticket ID: TKT-"
-                + case_id
+                + transaction_id
             )
         elif action == ActionType.FILE_STR:
             result.details = (
-                "Suspicious Transaction Report filed with reference: STR-" + case_id
+                "Suspicious Transaction Report filed with reference: STR-"
+                + transaction_id
             )
         elif action == ActionType.NOTIFY_MAS:
             result.details = (
-                "MAS notification submitted via regulatory portal. Ref: MAS-" + case_id
+                "MAS notification submitted via regulatory portal. Ref: MAS-"
+                + transaction_id
             )
 
         self.execution_log.append(result)
@@ -333,14 +337,14 @@ class ActionExecutor:
         """
         Execute all actions in the plan according to execution order
         """
-        print(f"\n📋 Executing action plan for case: {plan.case_id}")
+        print(f"\n📋 Executing action plan for transaction: {plan.transaction_id}")
         print(f"   Actions to execute: {len(plan.actions)}")
 
         results = []
 
         for idx in plan.execution_order:
             action = plan.actions[idx]
-            result = self.execute_action(plan.case_id, action)
+            result = self.execute_action(plan.transaction_id, action)
             results.append(result)
 
         # Send notifications
@@ -367,7 +371,7 @@ def simulate_human_approval(
     print("\n" + "=" * 80)
     print("🚨 HUMAN APPROVAL REQUIRED 🚨")
     print("=" * 80)
-    print(f"Case ID: {approval_request.case_id}")
+    print(f"Transaction ID: {approval_request.transaction_id}")
     print(f"Risk Score: {approval_request.risk_score}")
     print(f"Urgency: {approval_request.urgency}")
     print(f"Approver Required: {approval_request.approver_role}")
@@ -385,7 +389,7 @@ def simulate_human_approval(
     print("✅ APPROVED by Senior Compliance Officer")
 
     return HumanApprovalResponse(
-        case_id=approval_request.case_id,
+        transaction_id=approval_request.transaction_id,
         approver_name="Sarah Chen",
         approver_role="Senior Compliance Officer",
         status=ApprovalStatus.APPROVED,
