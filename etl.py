@@ -119,13 +119,4 @@ if __name__ == "__main__":
     Base.metadata.create_all(engine)
 
     transactions = pd.read_csv("data/transactions_mock_1000_for_participants.csv")
-
-    # date_fields = [
-    #     "booking_datetime", "value_date", "kyc_last_completed", "kyc_due_date",
-    #     "suspicion_determined_datetime", "str_filed_datetime"
-    # ]
-    # for col in date_fields:
-    #     if col in transactions.columns:
-    #         transactions[col] = transactions[col].apply(parse_date)
-
     transactions.to_sql("transactions", con = engine, if_exists = "replace", index = False, method = "multi")

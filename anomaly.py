@@ -15,6 +15,7 @@ class AnomalyReport(BaseModel):
     customer_segment: Optional[str] = None
     prior_alert_count_30d: Optional[conint(ge=0)] = 0
 
+
 ANOMALY_PROMPT = f"""{RECOMMENDED_PROMPT_PREFIX}
 You are a Financial Crime Monitoring Agent for a regulated bank in Singapore. 
 Analyze the following transaction in real-time for suspicious activity and potential money laundering. 
@@ -47,24 +48,3 @@ Transaction:
 Regulatory Rules:
 {rules}
 """
-
-anomaly_agent = Agent(
-    name="FinancialCrimeAnalyst",
-    instructions=ANOMALY_PROMPT,
-    model="llama-3.3-70b-versatile",
-)
-
-if __name__ == "__main__":
-    print("\n" + "=" * 80)
-    print("🏦 Financial Crime Analyst Agent")
-    print("=" * 80 + "\n")
-
-    import json
-    with open("data/sample_transaction.json", "r") as f:
-        transaction = json.dumps(json.load(f), indent = 2)
-    
-    result = Runner.run_sync(
-        anomaly_agent,
-        INPUT_PROMPT.format(transaction = transaction, rules = rules) # TODO: wait for yuge output
-    )
-    print(result.final_output)
