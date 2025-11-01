@@ -36,7 +36,10 @@ client = Groq()
 engine = create_engine(f"sqlite:///data/singhacks.db")
 Session = sessionmaker(bind=engine)
 
-# TODO: load yuge output here
+
+with open("reports/regulations.json") as f:
+    regulations = json.load(f)
+
 
 def run_analysis(transaction_id: str):
     with Session() as session:
@@ -48,8 +51,6 @@ def run_analysis(transaction_id: str):
     transaction = transaction.to_dict()
     transaction["prior_alert_count_30d"] = 1 if transaction["str_filed_datetime"] is not None else 0
 
-    # TODO: use yuge output
-    rules = 'Financial institutions must do their due dilligence to monitor customer transactions.'
     completion = client.chat.completions.create(
         model="meta-llama/llama-4-maverick-17b-128e-instruct",
         messages=[
@@ -59,7 +60,7 @@ def run_analysis(transaction_id: str):
             },
             {
                 "role": "user",
-                "content": INPUT_PROMPT.format(transaction = transaction, rules = rules)
+                "content": INPUT_PROMPT.format(transaction = transaction, rules = regulations)
             }
         ],
         response_format={

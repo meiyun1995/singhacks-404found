@@ -3,25 +3,31 @@ from bs4 import BeautifulSoup
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTTextContainer
 from dotenv import load_dotenv
-from urllib.parse import urljoin
+
 from groq import Groq
 from collections import defaultdict
 from datetime import datetime
 from difflib import unified_diff
+from urllib.parse import urljoin
 
 
 load_dotenv()
+
+
 if not os.getenv("GROQ_API_KEY"):
     raise ValueError("GROQ_API_KEY not found. Please set it in your .env or env vars.")
-llm_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+if not os.getenv("GOOGLE_API_KEY"):
+    raise ValueError("GOOGLE_API_KEY not found. Please set it in your .env or env vars.")
+
+if not os.getenv("GOOGLE_CX"):
+    raise ValueError("GOOGLE_CX not found. Please set it in your .env or env vars.")
+
+if not os.getenv("GOOGLE_SEARCH_ENDPOINT"):
+    raise ValueError("GOOGLE_SEARCH_ENDPOINT not found. Please set it in your .env or env vars.")
+
+llm_client = Groq()
 LLM_MODEL = "llama-3.3-70b-versatile"
-
-# TODO: remove this after use
-GOOGLE_API_KEY = "AIzaSyDKANy1S5mraJJB6kymvfhSHysybpR80Pw"
-GOOGLE_CX = "ce7cd6016c24df283"
-SEARCH_ENDPOINT = "https://www.googleapis.com/customsearch/v1"
-
-
 KEYWORDS = [
     r"\bhigh[- ]risk countr(y|ies)\b",
     r"\bhigh[- ]risk jurisdiction(s)?\b",
@@ -55,22 +61,21 @@ SUMMARIZE_SYS = (
 )
 
 PIPELINE_VERSION = "1.0.0"
-AUDIT_LOG_FILE = "regulation_audit_log.jsonl"
+AUDIT_LOG_FILE = "audit_logs/regulation_audit_log.jsonl"
 AUDIT_DIFF_FILE = "regulation_audit_diff.log"
 
 
 def google_cse_search(query: str, max_results: int = 10, sleep: float = 0.2, max_retries: int = 3):
-    assert GOOGLE_API_KEY and GOOGLE_CX
     results = []
     start = 1
     while len(results) < max_results:
         remaining = max_results - len(results)
         num = min(10, remaining)
-        params = {"key": GOOGLE_API_KEY, "cx": GOOGLE_CX, "q": query, "start": start, "num": num}
+        params = {"key": os.getenv("GOOGLE_API_KEY"), "cx": os.getenv("GOOGLE_CX"), "q": query, "start": start, "num": num}
 
         for attempt in range(1, max_retries + 1):
             try:
-                resp = requests.get(SEARCH_ENDPOINT, params=params, timeout=30)
+                resp = requests.get(os.getenv("GOOGLE_SEARCH_ENDPOINT"), params=params, timeout=30)
                 if resp.status_code == 200:
                     data = resp.json()
                     items = data.get("items", []) or []
@@ -324,7 +329,9 @@ def run_all_regulators(query: str, max_results=10):
         final_output.update(result)  # each is {"MAS": [...]}, {"FINMA": [...]}, etc.
 
     print("\n====== FINAL COMBINED RESULT ======")
-    print(json.dumps(final_output, indent=2))
+    with open("reports/regulations.json", "w") as f:
+        json.dump(final_output, f, indent = 2)
+
     return final_output
 
 
