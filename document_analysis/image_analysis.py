@@ -340,13 +340,13 @@ def analyze_image(
 
     # Save combined log if requested
     if save_combined_log:
+        # send to audit_logs/
+        audit_log_path = Path("audit_logs")
+        audit_log_path.mkdir(exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = Path(pdf_path).stem
-        combined_log_path = os.path.join(
-            log_dir, f"combined_analysis_{timestamp}_{file_name}.json"
-        )
-
-        with open(combined_log_path, "w") as f:
+        audit_log_file = audit_log_path / f"audit_log_{timestamp}_{file_name}.json"
+        with open(audit_log_file, "w") as f:
             json.dump(combined_result, f, indent=2)
 
         print("\n" + "=" * 80)

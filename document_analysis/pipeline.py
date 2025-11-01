@@ -337,8 +337,8 @@ def document_analysis_reporter(image_path: str):
         image_path=image_path, deepfake_threshold=0.8, perform_reverse_search=True
     )
     system_prompt = f"""
-    You are a document forensics expert. Analyze the following document analysis results and provide a concise report highlighting any risks, anomalies, or recommendations.
-    
+    You are a document forensics expert. Analyze the following document analysis results and provide a detailed report highlighting any risks, anomalies, or recommendations.
+    Ensure that ALL anomalies are stated clearly in the report.
     {llm_ready_output}
     """
     # send to groq
