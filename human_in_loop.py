@@ -4,7 +4,13 @@ Human-in-the-Loop (HITL) module for compliance workflow
 Handles human approvals, notifications, and action execution
 """
 
-from typing import Optional, Literal, List, Dict, Any
+import sys
+from typing import Optional, List, Dict, Any, Tuple
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
@@ -109,7 +115,7 @@ class HumanInLoopDecisionEngine:
         recommendation: str,
         department_results: Dict[str, Any],
         prior_alert_count: int = 0,
-    ) -> tuple[bool, Optional[HumanApprovalRequest]]:
+    ) -> Tuple[bool, Optional[HumanApprovalRequest]]:
         """
         Determine if human approval is required based on multiple criteria
 
