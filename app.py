@@ -4,7 +4,6 @@ import json
 from groq import Groq
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from agents import Runner
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -12,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 
 from etl import Transaction
 from anomaly import INPUT_PROMPT, ANOMALY_PROMPT, AnomalyReport
+from workflow_router import workflow
 
 
 load_dotenv()
@@ -70,7 +70,8 @@ def run_analysis(transaction_id: str):
             }
         }
     )
-    return AnomalyReport(**json.loads(completion.choices[0].message.content))
+    workflow(AnomalyReport(**json.loads(completion.choices[0].message.content)))
+    return "Success!"
 
 
 @app.post("/transactions/analyze")

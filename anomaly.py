@@ -1,4 +1,3 @@
-from agents import Agent, Runner
 from typing import Literal, Optional
 from pydantic import BaseModel, confloat, conint
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX

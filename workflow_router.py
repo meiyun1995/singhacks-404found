@@ -254,8 +254,7 @@ coordinator = Agent(
 )
 
 # ---------- Example run with Human-in-the-Loop ----------
-
-if __name__ == "__main__":
+def workflow(report):
     print("\n" + "=" * 80)
     print("🏦 COMPLIANCE WORKFLOW WITH HUMAN-IN-THE-LOOP")
     print("=" * 80 + "\n")
@@ -263,18 +262,6 @@ if __name__ == "__main__":
     # Initialize audit logger and report generator
     audit_logger = AuditLogger()
     report_generator = ReportGenerator()
-
-    # Example anomaly report from Agent (2)
-    report = AnomalyReport(
-        transaction_id="TXN-2025-11-01-0001",
-        product="Cards",
-        risk_score=0.86,
-        regulation="MAS Notice 626 13.14(b)",
-        evidence="Multiple high-value cross-border card-not-present transactions in <24h; device fingerprint mismatch; MCC 4829; IP geolocation flag.",
-        recommendation="Block",
-        customer_segment="Retail",
-        prior_alert_count_30d=2,
-    )
 
     # Start audit trail
     audit_logger.start_audit_trail(
