@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from agents import Agent, Runner, handoff
 from agents.extensions import handoff_filters
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
-from anomaly import AnomalyReport
 
 
 # Import human-in-the-loop components
