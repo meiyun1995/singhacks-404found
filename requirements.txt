@@ -8,3 +8,4 @@ sqlalchemy==2.0.44
 bs4==0.0.2
 pdfminer
 pdfminer.six
+pymupdf==1.26.5
