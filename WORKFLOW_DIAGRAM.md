@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    STEP 1: ANOMALY DETECTION                     │
+│                    STEP 1: ANOMALY DETECTION                    │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │ Transaction ID: TXN-2025-11-01-0001                      │   │
 │  │ Risk Score: 0.86 (HIGH)                                  │   │
@@ -15,17 +15,17 @@
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              STEP 2: MULTI-AGENT COORDINATION                    │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │ FrontOffice  │  │    Legal     │  │  Compliance  │          │
-│  │    Agent     │  │    Agent     │  │    Agent     │          │
-│  ├──────────────┤  ├──────────────┤  ├──────────────┤          │
-│  │• Action plan │  │• Legal risk  │  │• Final       │          │
-│  │• Customer    │  │• Disclosure  │  │  decision    │          │
-│  │  contact     │  │  required    │  │• Reporting   │          │
-│  │• Escalation  │  │• Assessment  │  │• Next steps  │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│              STEP 2: MULTI-AGENT COORDINATION                   │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │ FrontOffice  │  │    Legal     │  │  Compliance  │           │
+│  │    Agent     │  │    Agent     │  │    Agent     │           │
+│  ├──────────────┤  ├──────────────┤  ├──────────────┤           │
+│  │• Action plan │  │• Legal risk  │  │• Final       │           │
+│  │• Customer    │  │• Disclosure  │  │  decision    │           │
+│  │  contact     │  │  required    │  │• Reporting   │           │
+│  │• Escalation  │  │• Assessment  │  │• Next steps  │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
 │         │                  │                  │                 │
 │         └──────────────────┴──────────────────┘                 │
 │                           ▼                                     │
@@ -36,15 +36,15 @@
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│         STEP 3: HUMAN-IN-THE-LOOP DECISION CHECK                 │
-│                                                                  │
+│         STEP 3: HUMAN-IN-THE-LOOP DECISION CHECK                │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────┐     │
 │  │  HITL Decision Engine Evaluates:                       │     │
 │  │  ✓ Risk Score ≥ 0.85? → CRITICAL                       │     │
 │  │  ✓ Recommendation = "Block"? → HIGH                    │     │
-│  │  ✓ Legal Risk = "High"? → LEGAL COUNSEL               │     │
-│  │  ✓ MAS Reporting Required? → HEAD OF COMPLIANCE       │     │
-│  │  ✓ Conflicting Recommendations? → SENIOR MANAGER      │     │
+│  │  ✓ Legal Risk = "High"? → LEGAL COUNSEL                │     │
+│  │  ✓ MAS Reporting Required? → HEAD OF COMPLIANCE        │     │
+│  │  ✓ Conflicting Recommendations? → SENIOR MANAGER       │     │
 │  └────────────────────────────────────────────────────────┘     │
 │                           ▼                                     │
 │            ┌─────────────────────────────┐                      │
@@ -78,87 +78,87 @@
        ▼                   ▼                   ▼              ▼
 ┌──────────────┐    ┌──────────────┐   ┌──────────────┐  ┌──────────────┐
 │  APPROVED    │    │  REJECTED    │   │  ESCALATED   │  │  MODIFIED    │
-│     ✅       │    │     ❌       │   │     🔺      │  │     🔄       │
+│     ✅        │   │     ❌        │   │     🔺       │  │     🔄       │
 └──────┬───────┘    └──────┬───────┘   └──────┬───────┘  └──────┬───────┘
        │                   │                   │                 │
        ▼                   ▼                   ▼                 ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  _create_     │  _create_       │  _create_       │  _create_          │
-│  standard_    │  rejection_     │  escalation_    │  modified_         │
-│  plan()       │  plan()         │  plan()         │  plan()            │
-├───────────────┼─────────────────┼─────────────────┼────────────────────┤
-│ Actions:      │ Actions:        │ Actions:        │ Actions:           │
-│ • block_card  │ • monitor_only  │ • freeze_acc    │ [Parsed from       │
-│ • contact     │                 │ • escalate      │  approval text]    │
-│ • file_str    │ Recipients:     │ • monitor       │                    │
-│ • notify_mas  │ • compliance    │                 │ If "Monitor":      │
-│               │ • senior-mgr    │ Recipients:     │ • monitor_only     │
-│ Recipients:   │ • audit-trail   │ • compliance    │ • contact          │
-│ • compliance  │                 │ • head-of-comp  │                    │
-│ • fraud-team  │ Channels:       │ • ceo           │ If "Block":        │
-│ • senior-mgr  │ • email         │ • legal         │ • block_card       │
-│               │ • dashboard     │                 │ • contact          │
-│ Channels:     │ • slack         │ Channels:       │ • file_str         │
-│ • email       │                 │ • email         │                    │
-│ • dashboard   │ Rollback:       │ • dashboard     │ Recipients:        │
-│ • sms         │ "Rejection by   │ • teams         │ • compliance       │
-│               │  [Approver]:    │                 │ • audit-trail      │
-│               │  [Reason]"      │ Rollback:       │                    │
-│               │                 │ "Escalated by   │ Rollback:          │
-│               │                 │  [Approver]:    │ "Modified from     │
-│               │                 │  [Reason]"      │  [Original] to     │
-│               │                 │                 │  [New]: [Reason]"  │
-└───────────────┴─────────────────┴─────────────────┴────────────────────┘
+│  _create_     │  _create_       │  _create_       │  _create_           │
+│  standard_    │  rejection_     │  escalation_    │  modified_          │
+│  plan()       │  plan()         │  plan()         │  plan()             │
+├───────────────┼─────────────────┼─────────────────┼────────────────────-┤
+│ Actions:      │ Actions:        │ Actions:        │ Actions:            │
+│ • block_card  │ • monitor_only  │ • freeze_acc    │ [Parsed from        │
+│ • contact     │                 │ • escalate      │  approval text]     │
+│ • file_str    │ Recipients:     │ • monitor       │                     │
+│ • notify_mas  │ • compliance    │                 │ If "Monitor":       │
+│               │ • senior-mgr    │ Recipients:     │ • monitor_only      │
+│ Recipients:   │ • audit-trail   │ • compliance    │ • contact           │
+│ • compliance  │                 │ • head-of-comp  │                     │
+│ • fraud-team  │ Channels:       │ • ceo           │ If "Block":         │
+│ • senior-mgr  │ • email         │ • legal         │ • block_card        │
+│               │ • dashboard     │                 │ • contact           │
+│ Channels:     │ • slack         │ Channels:       │ • file_str          │
+│ • email       │                 │ • email         │                     │
+│ • dashboard   │ Rollback:       │ • dashboard     │ Recipients:         │
+│ • sms         │ "Rejection by   │ • teams         │ • compliance        │
+│               │  [Approver]:    │                 │ • audit-trail       │
+│               │  [Reason]"      │ Rollback:       │                     │
+│               │                 │ "Escalated by   │ Rollback:           │
+│               │                 │  [Approver]:    │ "Modified from      │
+│               │                 │  [Reason]"      │  [Original] to      │
+│               │                 │                 │  [New]: [Reason]"   │
+└───────────────┴─────────────────┴─────────────────┴────────────────────-┘
        │                   │                   │                 │
        └───────────────────┴───────────────────┴─────────────────┘
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                 STEP 4: ACTION EXECUTION                                 │
-│                                                                          │
+│                 STEP 4: ACTION EXECUTION                                │
+│                                                                         │
 │  ┌───────────────────────────────────────────────────────────────┐      │
 │  │  Execute actions in PRIORITY ORDER:                           │      │
-│  │                                                                │      │
-│  │  Priority 1: freeze_account, block_card                        │      │
+│  │                                                               │      │
+│  │  Priority 1: freeze_account, block_card                       │      │
 │  │  Priority 2: file_str, notify_mas                             │      │
 │  │  Priority 3: escalate_to_senior                               │      │
 │  │  Priority 4: contact_customer                                 │      │
 │  │  Priority 5: monitor_only                                     │      │
 │  │  Priority 6: allow_transaction                                │      │
 │  └───────────────────────────────────────────────────────────────┘      │
-│                                                                          │
-│  For each action:                                                        │
-│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                │
-│  │  Execute     │ → │  Log Result  │ → │  Notify      │                │
-│  │  Action      │   │  (Success/   │   │  Stakeholders│                │
-│  │              │   │   Fail)      │   │              │                │
-│  └──────────────┘   └──────────────┘   └──────────────┘                │
-└─────────────────────────────┬────────────────────────────────────────────┘
+│                                                                         │
+│  For each action:                                                       │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                 │
+│  │  Execute     │ → │  Log Result  │ → │  Notify      │                 │
+│  │  Action      │   │  (Success/   │   │  Stakeholders│                 │
+│  │              │   │   Fail)      │   │              │                 │
+│  └──────────────┘   └──────────────┘   └──────────────┘                 │
+└─────────────────────────────┬───────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    STEP 5: WORKFLOW SUMMARY                              │
-│                                                                          │
+│                    STEP 5: WORKFLOW SUMMARY                             │
+│                                                                         │
 │  ╔════════════════════════════════════════════════════════════════╗     │
 │  ║                    WORKFLOW SUMMARY                            ║     │
 │  ╠════════════════════════════════════════════════════════════════╣     │
 │  ║ Transaction ID: TXN-2025-11-01-0001                            ║     │
 │  ║ Risk Score: 0.86                                               ║     │
 │  ║ Agents Involved: FrontOffice, Legal, Compliance                ║     │
-│  ║ Human Approval: [✅/❌/🔺] [STATUS]                            ║     │
+│  ║ Human Approval: [✅/❌/🔺] [STATUS]                             ║     │
 │  ║   Approved by: [Name] ([Role])                                 ║     │
 │  ║   Comments: [Management reasoning]                             ║     │
 │  ║ Final Decision: [Block/Monitor/Allow]                          ║     │
 │  ║ Execution Notes: [Rollback plan if modified/rejected]          ║     │
 │  ║ Actions Executed: [X]/[Total]                                  ║     │
-│  ║ Status: ✅ COMPLETED / ⚠️ PARTIAL                              ║     │
+│  ║ Status: ✅ COMPLETED / ⚠️ PARTIAL                               ║     │
 │  ╚════════════════════════════════════════════════════════════════╝     │
-│                                                                          │
+│                                                                         │
 │  ┌────────────────────────────────────────────────────────────────┐     │
 │  │  EXECUTION DETAILS:                                            │     │
 │  │  1. ✅ [action]: [details]                                     │     │
 │  │  2. ✅ [action]: [details]                                     │     │
 │  │  3. ✅ [action]: [details]                                     │     │
 │  └────────────────────────────────────────────────────────────────┘     │
-│                                                                          │
+│                                                                         │
 │  ┌────────────────────────────────────────────────────────────────┐     │
 │  │  AUDIT TRAIL LOGGED                                            │     │
 │  │  • Transaction processing history                              │     │
@@ -167,7 +167,7 @@
 │  │  • Notification confirmations                                  │     │
 │  │  • Rollback plan (if applicable)                               │     │
 │  └────────────────────────────────────────────────────────────────┘     │
-└──────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Branching Decision Matrix
