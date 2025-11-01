@@ -60,8 +60,8 @@
                         <td>{{ txn.customer_risk_rating }}</td>
                         <td>{{ txn.client_risk_profile }}</td>
                         <td>{{ "{:.2f}".format(txn.ai_risk_score) }}</td>
-                        <td class="{% if txn.ai_risk_score > 0.75 %}high-risk{% else %}low-risk{% endif %}">
-                            {% if txn.ai_risk_score > 0.75 %}True{% else %}False{% endif %}
+                        <td class="{% if txn.ai_risk_score >= 0.65 %}high-risk{% else %}low-risk{% endif %}">
+                            {% if txn.ai_risk_score >= 0.65 %}True{% else %}False{% endif %}
                         </td>
                         <td>{{ txn.transaction_time }}</td>
                     </tr>
@@ -98,14 +98,14 @@
 
                 // Update counters
                 totalTransactions += 1;
-                if (txn.ai_risk_score > 0.75) actionRequired += 1;
+                if (txn.ai_risk_score >= 0.65) actionRequired += 1;
 
                 totalCountElem.textContent = totalTransactions;
                 actionCountElem.textContent = actionRequired;
 
                 // Add new transaction row
                 const row = document.createElement("tr");
-                const attentionRequired = txn.ai_risk_score > 0.75;
+                const attentionRequired = txn.ai_risk_score >= 0.65;
 
                 row.innerHTML = `
                     <td>${txn.transaction_id}</td>

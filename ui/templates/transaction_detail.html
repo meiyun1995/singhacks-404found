@@ -1,77 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaction Detail - {{ transaction.transaction_id }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transaction Report - {{ transaction.transaction_id }}</title>
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f6fa;
+        margin: 0;
+        padding: 20px;
+    }
+    .dashboard-container {
+        max-width: 1200px;
+        margin: auto;
+    }
+
+    /* --- Transaction Details Panel --- */
+    .details-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+    }
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px 15px;
+    }
+    .details-grid .label {
+        font-weight: 600;
+        color: #555;
+    }
+    .details-grid .value {
+        color: #333;
+        word-break: break-word;
+    }
+    .details-grid .value.high-risk {
+        color: red;
+        font-weight: bold;
+    }
+
+    /* Responsive grid */
+    @media (max-width: 1024px) {
+        .details-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    @media (max-width: 768px) {
+        .details-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- Report Panel --- */
+    .report-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .report-panel textarea {
+        width: 100%;
+        height: 200px;
+        resize: vertical;
+        font-size: 0.9rem;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+
+    /* --- Buttons --- */
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    button {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: white;
+        transition: background-color 0.2s ease-in-out;
+    }
+    button.save-btn {
+        background-color: #2a4d69;
+    }
+    button.save-btn:hover {
+        background-color: #1e3550;
+    }
+    button.submit-btn {
+        background-color: #1e88e5;
+    }
+    button.submit-btn:hover {
+        background-color: #1565c0;
+    }
+
+    /* --- Custom Alert Box --- */
+    .custom-alert {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #2a4d69;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 1000;
+        font-size: 0.9rem;
+        min-width: 200px;
+        max-width: 300px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .back-btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #2a4d69; /* same as save button */
+        color: white;               /* match save button text */
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease-in-out;
+        margin-bottom: 15px;        /* space below button */
+    }
+
+    .back-btn:hover {
+        background-color: #1e3550;  /* same hover as save button */
+    }
+</style>
 </head>
 <body>
-    <div class="dashboard-container">
+<div class="dashboard-container">
+    <h1 style="margin-bottom: 20px;">Transaction Report - {{ transaction.transaction_id }}</h1>
+    <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
 
-        <!-- Title Panel -->
-        <div class="title-panel">
-            <h1>Transaction Monitoring Workbench</h1>
+    <!-- Transaction Details Panel -->
+    <div class="details-panel">
+        <h2 style="font-size: 1rem; margin-bottom: 10px;">Transaction Details</h2>
+        <div class="details-grid">
+            {% for field, value in transaction.items() %}
+                <div class="label">{{ field.replace('_',' ').title() }}:</div>
+                <div class="value {% if field == 'attention_required' and value %}high-risk{% endif %}">
+                    {{ value }}
+                </div>
+            {% endfor %}
         </div>
-
-        <!-- Detail Header -->
-        <div class="detail-header">
-            <h2>Transaction Detail</h2>
-            <a href="{{ url_for('dashboard') }}" class="back-button">← Back to Dashboard</a>
-        </div>
-
-        <!-- Transaction Info Card -->
-        <div class="transaction-detail-card">
-            <div class="detail-row">
-                <span class="label">Transaction ID:</span>
-                <span class="value">{{ transaction.transaction_id }}</span>
-            </div>
-            <!-- <div class="detail-row">
-                <span class="label">Transaction Amount:</span>
-                <span class="value">{{ "{:.2f}".format(transaction.transaction_amount) }}</span>
-            </div> -->
-            <div class="detail-row">
-                <span class="label">Currency:</span>
-                <span class="value">{{ transaction.transaction_currency }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Channel:</span>
-                <span class="value">{{ transaction.transaction_channel }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Product Type:</span>
-                <span class="value">{{ transaction.transaction_product_type }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Beneficiary Country:</span>
-                <span class="value">{{ transaction.beneficiary_country }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Customer Type:</span>
-                <span class="value">{{ transaction.customer_type }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Customer Risk Rating:</span>
-                <span class="value">{{ transaction.customer_risk_rating }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Client Risk Profile:</span>
-                <span class="value">{{ transaction.client_risk_profile }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">AI Risk Score:</span>
-                <span class="value {% if transaction.ai_risk_score > 0.75 %}high-risk{% endif %}">
-                    {{ "{:.2f}".format(transaction.ai_risk_score) }}
-                </span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Attention Required:</span>
-                <span class="value {% if transaction.ai_risk_score > 0.75 %}high-risk{% endif %}">
-                    {% if transaction.ai_risk_score > 0.75 %}True{% else %}False{% endif %}
-                </span>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Transaction Report Panel -->
+    <div class="report-panel">
+        <h2 style="font-size: 1rem; margin-bottom: 10px;">Transaction Report</h2>
+        <textarea id="report-text">{{ transaction_report_text or '' }}</textarea>
+        <div class="button-group">
+            <button class="save-btn" onclick="saveReport()">Save</button>
+            <button class="submit-btn" onclick="submitReport()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Alert Box -->
+<div id="custom-alert" class="custom-alert">
+    <span id="alert-message"></span>
+</div>
+
+<script>
+function showAlert(message) {
+    const alertBox = document.getElementById("custom-alert");
+    const alertMessage = document.getElementById("alert-message");
+    alertMessage.textContent = message;
+    alertBox.style.display = "block";
+    alertBox.style.opacity = "1";
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        alertBox.style.opacity = "0";
+        setTimeout(() => {
+            alertBox.style.display = "none";
+        }, 300);
+    }, 3000);
+}
+
+function saveReport() {
+    showAlert("Changes saved successfully!");
+}
+
+function submitReport() {
+    const reportText = document.getElementById("report-text");
+    reportText.setAttribute("readonly", true);
+
+    // Hide Save and Submit buttons
+    const saveBtn = document.querySelector(".save-btn");
+    const submitBtn = document.querySelector(".submit-btn");
+    saveBtn.style.display = "none";
+    submitBtn.style.display = "none";
+
+    showAlert("Report submitted successfully!");
+}
+</script>
 </body>
 </html>
