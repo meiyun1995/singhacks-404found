@@ -19,10 +19,10 @@ initial_txn["transaction_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 live_transactions.append(initial_txn)
 pending_transactions = db[~(db.transaction_id == "ad66338d-b17f-47fc-a966-1b4395351b41")].to_dict(orient="records")
 
-with open("../reports/RPT-20251101-0001_ad66338d-b17f-47fc-a966-1b4395351b41.text", "r") as f:
+with open("../reports/RPT-20251101-0001_ad66338d-b17f-47fc-a966-1b4395351b41.text", "r") as f: # TODO: add for part 2 cache
     cached_report = f.read()
 
-@app.get("/")
+@app.get("/dashboard")
 async def dashboard(request: Request):
     return templates.TemplateResponse(
         "dashboard.html",
@@ -52,4 +52,22 @@ async def stream_transactions():
             live_transactions.append(txn)
             yield f"data: {json.dumps(txn)}\n\n"
             await asyncio.sleep(5)
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@app.get("/documents/analyze")
+async def analyze_document(request: Request):
+    return templates.TemplateResponse(
+        "document_analysis.html",
+        {"request": request},
+    )
+
+@app.get("/stream/analysis")
+async def stream_analysis():
+    """
+    Simulate streaming of document analysis char by char.
+    """
+    async def event_generator():
+        for char in cached_report:
+            yield f"data: {json.dumps(char)}\n\n"
+            await asyncio.sleep(0.01)
     return StreamingResponse(event_generator(), media_type="text/event-stream")

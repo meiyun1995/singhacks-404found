@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Analysis Module</title>
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Container fills remaining space */
+.container {
+    display: flex;
+    flex: 1; /* fill vertical space */
+    gap: 20px;
+    flex-wrap: wrap; /* wrap on smaller screens */
+}
+
+/* --- Left Panel: File Upload --- */
+.left-panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 20px;
+    flex: 1 1 300px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.left-panel h2 {
+    margin-top: 0;
+}
+
+.file-input {
+    width: 100%;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.left-panel button {
+    padding: 8px 16px;
+    background-color: #1e88e5;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: auto;             /* natural width */
+    flex-shrink: 0;          /* do not shrink */
+    align-self: flex-start;  /* do not stretch, align to left */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.left-panel button:hover {
+    background-color: #1565c0;
+}
+
+/* --- Right Panel: Analysis Results --- */
+.right-panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 20px;
+    flex: 2 1 500px;
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.right-panel h2 {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+#analysis-text {
+    flex: 1; /* fill remaining space */
+    width: 100%;
+    resize: vertical;
+    font-size: 1rem;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+
+/* Buttons style */
+button.save-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: white;
+    background-color: #2a4d69;
+    transition: background-color 0.2s ease-in-out;
+}
+
+button.save-btn:hover {
+    background-color: #1e3550;
+}
+
+button.submit-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: white;
+    background-color: #1e88e5;
+    transition: background-color 0.2s ease-in-out;
+}
+
+button.submit-btn:hover {
+    background-color: #1565c0;
+}
+
+/* --- Custom Alert Box --- */
+.custom-alert {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #2a4d69;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    font-size: 0.9rem;
+    min-width: 200px;
+    max-width: 300px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Left Panel: File Upload -->
+    <div class="left-panel">
+        <h2>Upload Document</h2>
+        <input type="file" id="file-input" class="file-input">
+        <button onclick="submitFile()">Submit</button>
+    </div>
+
+    <!-- Right Panel: Analysis Results -->
+    <div class="right-panel">
+        <h2>Analysis Results</h2>
+        <textarea id="analysis-text" placeholder="Analysis results will appear here..."></textarea>
+        <div class="button-group">
+            <button class="save-btn" onclick="saveAnalysis()">Save</button>
+            <button class="submit-btn" onclick="submitAnalysis()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Alert Box -->
+<div id="custom-alert" class="custom-alert">
+    <span id="alert-message"></span>
+</div>
+
+<script>
+// Custom alert function
+function showAlert(message) {
+    const alertBox = document.getElementById("custom-alert");
+    const alertMessage = document.getElementById("alert-message");
+    alertMessage.textContent = message;
+    alertBox.style.display = "block";
+    alertBox.style.opacity = "1";
+
+    setTimeout(() => {
+        alertBox.style.opacity = "0";
+        setTimeout(() => { alertBox.style.display = "none"; }, 300);
+    }, 3000);
+}
+
+// Simulate file submission and populate textarea
+function submitFile() {
+    const fileInput = document.getElementById("file-input");
+    if (!fileInput.files.length) {
+        showAlert("Please select a file first.");
+        return;
+    }
+
+    const fileName = fileInput.files[0].name;
+    const analysisTextarea = document.getElementById("analysis-text");
+    analysisTextarea.value = ""; // clear previous content
+
+    // Open SSE connection
+    const eventSource = new EventSource(`/stream/analysis`);
+    
+    eventSource.onmessage = function(event) {
+        const text = JSON.parse(event.data);
+        analysisTextarea.value += text;       // append new text
+        analysisTextarea.scrollTop = analysisTextarea.scrollHeight; // auto scroll
+    }
+
+    eventSource.onerror = function(err) {
+        console.error("SSE error:", err);
+        eventSource.close();
+        showAlert("Streaming ended or failed.");
+    }
+
+    showAlert("Running analysis.");
+}
+
+// Save edits
+function saveAnalysis() {
+    showAlert("Changes saved successfully!");
+}
+
+// Submit the report
+function submitAnalysis() {
+    const analysisTextarea = document.getElementById("analysis-text");
+    analysisTextarea.setAttribute("readonly", true);
+
+    document.querySelector(".save-btn").style.display = "none";
+    document.querySelector(".submit-btn").style.display = "none";
+
+    showAlert("Report submitted successfully!");
+}
+</script>
+
+</body>
+</html>
