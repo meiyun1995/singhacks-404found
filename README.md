@@ -55,15 +55,27 @@ fastapi run app.py --port 8100
 
 ## System Workflow
 
-TODO: story which will overlap with the video, "script"
+The platform operates through two coordinated functions:
 
-System overview
-| Layer                           | Description                                                                                                                                                          |
-| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Regulation Miner**         | Crawls MAS/AMLA publications and extracts structured monitoring rules.                                                                                               |
-| **2. Anomaly Detector**         | Ingests transactions, applies rules, generates a `Risk Score`, identifies violated regulation(s), and produces an `AnomalyReport`.                                   |
-| **3. Compliance Coordinator**   | The controller agent in this repo — routes the anomaly report to the right departmental agents via LLM handoffs and aggregates all responses into one decision JSON. |
-| **4. Human-in-the-Loop Engine** | **NEW**: Determines when human approval is needed, presents interactive CLI, and branches execution based on management decision.                                    |
+1. Real-Time AML Monitoring
+Automatically triggered upon new transactions.
+Analyzes behavioral and profile anomalies, assigns a risk score, and flags regulation breaches.
+Uses LLM-driven routing for departmental triage and supports human-in-the-loop validation.
+Aggregates insights into a unified decision JSON and visualizes historical cases on a dashboard.
 
-Each department (Front Office, Legal, Compliance) is implemented as an **autonomous LLM agent** with its own specialized prompt and structured output schema.
----
+2. Document Corroboration
+Handles ad-hoc verification requests from Relationship Managers.
+Processes uploaded PDFs, text, or image documents for consistency and authenticity.
+Detects formatting or content inconsistencies and runs forensic image checks.
+Returns real-time risk assessments and recommendations.
+
+### Strategic Benefits
+
+By combining these modules, banks can accelerate investigation workflows, reduce manual review effort, and strengthen trust with high-value clients. The system enhances regulatory compliance, ensures early fraud detection, and improves client experience through faster and more transparent risk validation.
+
+## Tech Stack & Architecture
+
+Core components include:
+LLMs – Meta-Llama-3.3-70B-Versatile, Meta-Llama-4-Maverick-17B (Vision-Language)
+Frameworks – openai-agents-python SDK for orchestration and reasoning
+Modules – DeepSearch for document retrieval, reverse image search and deepfake detection for image integrity validation
