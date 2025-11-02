@@ -22,7 +22,7 @@ pending_transactions = db[~(db.transaction_id == "ad66338d-b17f-47fc-a966-1b4395
 with open("../reports/RPT-20251101-0001_ad66338d-b17f-47fc-a966-1b4395351b41.text", "r") as f:
     cached_report = f.read()
 
-with open("../reports/report_Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.txt") as f:
+with open("../reports/Document_Forensics_Risk_Report.txt") as f:
     image_cached_report = f.read()
 
 with open("../audit_logs/audit_ad66338d-b17f-47fc-a966-1b4395351b41_20251101154951.text") as f:

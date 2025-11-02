@@ -350,7 +350,7 @@ def analyze_image(
             json.dump(combined_result, f, indent=2)
 
         print("\n" + "=" * 80)
-        print(f"✅ Combined analysis log saved to: {combined_log_path}")
+        print(f"✅ Combined analysis log saved to: {audit_log_path}")
         print("=" * 80)
 
     # Print summary
