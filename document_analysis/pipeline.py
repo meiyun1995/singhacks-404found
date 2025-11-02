@@ -6,6 +6,7 @@ Integrates image analysis, reverse search, and synthetic image detection
 import os
 import json
 import base64
+import pymupdf
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -360,16 +361,32 @@ def document_analysis_reporter(image_path: str):
 
 # Example usage
 if __name__ == "__main__":
-    # Example 1: Analyze with all features
-    image_path = "/Users/chuameiyun/Documents/singhacks-404found/data/Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.png"
+    images = []
+    document_path = "data/Loan Contract_3 to 26(part 2).pdf"
+    file_name, _ = os.path.splitext(document_path)
 
-    print("🚀 Starting comprehensive document analysis...")
-    print("=" * 60)
+    zoom_matrix = pymupdf.Matrix(0.5, 0.5)
+    doc = pymupdf.open(document_path)
+    
+    for idx, page in enumerate(doc):
+        pix = page.get_pixmap(matrix = zoom_matrix)
+        image_path = f"{file_name}_{idx}.png"
+        pix.save(image_path)
+        images.append(image_path)
 
-    # Perform analysis and export for LLM
-    report = document_analysis_reporter(image_path)
-    # Display summary
-    print("\n" + "=" * 60)
-    print("📊 ANALYSIS SUMMARY")
-    print("=" * 60)
-    print(report)
+    # # Example 1: Analyze with all features
+    # image_path = "/Users/chuameiyun/Documents/singhacks-404found/data/Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.png"
+
+    for image_path in images:
+        print("🚀 Starting comprehensive document analysis...")
+        print("=" * 60)
+
+        # Perform analysis and export for LLM
+        report = document_analysis_reporter(image_path)
+        # Display summary
+        print("\n" + "=" * 60)
+        print("📊 ANALYSIS SUMMARY")
+        print("=" * 60)
+        print(report)
+
+# TODO: add another agent to stitch and summarize the report for all the pages into 1 report
