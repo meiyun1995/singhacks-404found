@@ -362,7 +362,7 @@ def document_analysis_reporter(image_path: str):
 # Example usage
 if __name__ == "__main__":
     images = []
-    document_path = "data/Loan Contract_3 to 26(part 2).pdf"
+    document_path = "data/Loan Contract_3 to 26(part 2).pdf" # "data/sample(part 2).pdf"
     file_name, _ = os.path.splitext(document_path)
 
     zoom_matrix = pymupdf.Matrix(0.5, 0.5)
@@ -373,9 +373,6 @@ if __name__ == "__main__":
         image_path = f"{file_name}_{idx}.png"
         pix.save(image_path)
         images.append(image_path)
-
-    # # Example 1: Analyze with all features
-    # image_path = "/Users/chuameiyun/Documents/singhacks-404found/data/Swiss_Home_Purchase_Agreement_Scanned_Noise_forparticipants.png"
 
     for image_path in images:
         print("🚀 Starting comprehensive document analysis...")
@@ -389,4 +386,49 @@ if __name__ == "__main__":
         print("=" * 60)
         print(report)
 
-# TODO: add another agent to stitch and summarize the report for all the pages into 1 report
+    from groq import Groq
+
+    client = Groq()
+
+    system_prompt = """
+    You are an expert report writer, skilled in summarizing multi-page reports into one summary.
+
+    You are provided with a multi-page document analysis report. Each page of the report is an analysis of 1 page of the document.
+
+    Your task is to compile the reports for each page into one overall report for the entire document.
+    
+    For each issue, provide detailed supporting evidence, which page the issue is found. 
+    For visually similar images/online image match, for each issue, include the number of matching images, links to similar images.
+    """
+
+    report_template = """
+    Report for page: {page_no}
+    {report}
+    """
+
+    reports_prompt = ""
+    for file in sorted(os.listdir("reports")):
+        if file.startswith("report_Loan Contract_3 to 26(part 2)"):
+            path = os.path.join("reports", file)
+            with open(path, "r") as f:
+                page_no = int(path.split(".")[0].split("_")[-1]) + 1
+                report = report_template.format(page_no = page_no, report = f.read())
+            reports_prompt += report
+            reports_prompt += "\n"
+    
+    completion = client.chat.completions.create(
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": reports_prompt
+            }
+        ],
+    )
+    print(completion.choices[0].message.content)
+    with open("reports/report_Loan Contract_3 to 26(part 2)_analysis.txt", "w") as f:
+        f.write(completion.choices[0].message.content)
